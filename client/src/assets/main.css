@@ -1,0 +1,49 @@
+@import 'tailwindcss';
+
+@theme {
+  /* Font Family */
+  --font-sans:
+    'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+    'Segoe UI Symbol', 'Noto Color Emoji';
+
+  /* Font Weights */
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  --color-primary: #9d3df2;
+  --color-primary-hover: color-mix(in srgb, var(--color-primary) 80%, white 20%);
+
+  --color-secondary: #00ff00;
+  --color-tertiary: #0000ff;
+
+  /* Shades of violet from darker to lighter */
+  --color-violet-100: #360066;
+  --color-violet-200: #520099;
+  --color-violet-300: #e8f0fe;
+  --color-violet-400: #f8f0ff;
+
+  --color-success: #00ac50;
+
+  --color-info: #448fea;
+  --color-infoLight: #dae9fb;
+
+  --color-warning: #ff9c27;
+  --color-warningLight: #ffebd4;
+
+  --color-error: #d90b0b;
+  --color-errorLight: #f7cece;
+  --color-error-hover: color-mix(in srgb, var(--color-error) 80%, white 20%);
+
+  --color-black: #000000;
+  --color-black-hover: color-mix(in srgb, var(--color-black) 80%, white 20%);
+
+  --color-white: #ffffff;
+}
+
+@layer base {
+  html {
+    font-family: var(--font-sans);
+  }
+}
