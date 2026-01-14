@@ -1,5 +1,5 @@
 <template>
-  <div class="h-screen flex overflow-hidden">
+  <div class="h-screen flex overflow-hidden [@media(max-width:380px)]:overflow-y-auto">
     <!-- Left image -->
     <img
       src="/images/businessman (2).jpg"

@@ -33,6 +33,9 @@
   --color-black: #000000;
   --color-black-hover: color-mix(in srgb, var(--color-black) 80%, white 20%);
 
+  --color-gray: oklch(0.92 0.004 286.32);
+  --color-gray-hover: color-mix(in srgb, var(--color-gray) 80%, white 20%);
+
   --color-white: #ffffff;
 }
 
