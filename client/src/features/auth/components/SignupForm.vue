@@ -26,6 +26,15 @@
     >
       <GoogleIcon class="mr-2" /> Continue with Google
     </Button>
+    <p class="text-muted-foreground text-center">
+      Have an account?
+      <RouterLink
+        :to="{ name: 'signin' }"
+        class="text-primary font-medium hover:underline cursor-pointer"
+      >
+        Log in
+      </RouterLink>
+    </p>
   </form>
 </template>
 
@@ -35,8 +44,9 @@ import { toTypedSchema } from '@vee-validate/zod'
 
 import Button from '@/components/ui/button/Button.vue'
 import TextField from '@/components/forms/TextField.vue'
-import { signupSchema } from '../schemas/signup.schema'
 import GoogleIcon from '@/assets/icons/socials/GoogleIcon.vue'
+import { RouterLink } from 'vue-router'
+import { signupSchema } from '../schemas/auth.schema'
 
 const { handleSubmit } = useForm({
   validationSchema: toTypedSchema(signupSchema),
