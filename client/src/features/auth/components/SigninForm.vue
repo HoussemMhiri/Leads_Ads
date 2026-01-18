@@ -5,7 +5,14 @@
 
       <TextField name="password" label="Password" type="password" />
 
-      <p class="text-primary font-medium hover:underline cursor-pointer">Forgot password?</p>
+      <p class="text-primary text-sm font-medium hover:underline cursor-pointer">
+        <RouterLink
+          :to="{ name: 'forgotPassword' }"
+          class="text-primary font-medium hover:underline cursor-pointer"
+        >
+          Forgot password?
+        </RouterLink>
+      </p>
 
       <Button type="submit" class="w-full mt-4 h-10 rounded-2xl cursor-pointer"> Log in </Button>
 

@@ -1,4 +1,5 @@
 import AuthLayout from '@/layouts/AuthLayout.vue'
+import ForgetPasswordView from '@/views/ForgetPasswordView.vue'
 import SigninView from '@/views/SigninView.vue'
 import SignupView from '@/views/SignupView.vue'
 
@@ -21,6 +22,11 @@ const router = createRouter({
           path: 'sign-in',
           name: 'signin',
           component: SigninView,
+        },
+        {
+          path: 'forgot-password',
+          name: 'forgotPassword',
+          component: ForgetPasswordView,
         },
       ],
     },
