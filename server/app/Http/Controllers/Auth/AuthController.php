@@ -6,13 +6,15 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
     /**
-     * Register a new user and return a token
+     * Register a new user and log them in
      */
     public function register(RegisterRequest $request)
     {
@@ -24,51 +26,57 @@ class AuthController extends Controller
             'password' => Hash::make($data['password']),
         ]);
 
-        // Optional: enforce single active session
-        $user->tokens()->delete();
-
-        $token = $user->createToken('web_app_' . now()->timestamp)->plainTextToken;
+        // Log the user in (creates session)
+        Auth::login($user);
 
         return response()->json([
-            'user'  => $this->userResource($user),
-            'token' => $token,
+            'user' => $this->userResource($user),
         ], 201);
     }
 
     /**
-     * Login user and return a token
+     * Login user (create session)
      */
     public function login(LoginRequest $request)
     {
         $data = $request->validated();
 
-        $user = User::where('email', $data['email'])->first();
-
-        if (!$user || !$user->password || !Hash::check($data['password'], $user->password)) {
+        // Attempt to authenticate
+        if (!Auth::attempt($data)) {
             throw ValidationException::withMessages([
                 'email' => ['The provided credentials are incorrect.'],
             ]);
         }
 
-        // Optional: enforce single active session
-        $user->tokens()->delete();
-
-        $token = $user->createToken('web_app_' . now()->timestamp)->plainTextToken;
+        // Regenerate session to prevent fixation attacks
+        $request->session()->regenerate();
 
         return response()->json([
-            'user'  => $this->userResource($user),
-            'token' => $token,
+            'user' => $this->userResource(Auth::user()),
         ]);
     }
 
     /**
-     * Logout user (delete current token)
+     * Logout user (destroy session)
      */
-    public function logout($request)
+    public function logout(Request $request)
     {
-        $request->user()->currentAccessToken()->delete();
+        Auth::guard("web")->logout();
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
 
         return response()->noContent();
+    }
+
+    /**
+     * Get authenticated user
+     */
+    public function user(Request $request)
+    {
+        return response()->json([
+            'user' => $this->userResource($request->user()),
+        ]);
     }
 
     /**
