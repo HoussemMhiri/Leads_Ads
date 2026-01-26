@@ -3,8 +3,6 @@
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 
-
-
 beforeEach(function () {
     $this->startSession();
     $this->csrfToken = session()->token();
@@ -30,7 +28,11 @@ it('registers a user and logs them in', function () {
     withCsrfHeaders()
         ->postJson('/api/auth/register', $payload)
         ->assertCreated()
-        ->assertJsonStructure(['user' => ['id', 'name', 'email']])
+        ->assertJsonStructure([
+            'message',
+            'user' => ['id', 'name', 'email']
+        ])
+        ->assertJson(['message' => 'Registration successful'])
         ->assertJsonMissing(['token']);
 
     $this->assertDatabaseHas('users', ['email' => 'houssem@test.com'])
@@ -48,7 +50,11 @@ it('logs in a user and creates a session', function () {
             'password' => 'password123',
         ])
         ->assertOk()
-        ->assertJsonStructure(['user' => ['id', 'name', 'email']])
+        ->assertJsonStructure([
+            'message',
+            'user' => ['id', 'name', 'email']
+        ])
+        ->assertJson(['message' => 'Login successful'])
         ->assertJsonMissing(['token']);
 
     $this->assertAuthenticatedAs($user);
@@ -76,9 +82,10 @@ it('logs out the authenticated user', function () {
 
     withCsrfHeaders()
         ->actingAs($user)
-
         ->postJson('/api/auth/logout')
-        ->assertNoContent();
+        ->assertOk()
+        ->assertJsonStructure(['message'])
+        ->assertJson(['message' => 'Logout successful']);
 });
 
 it('regenerates session on login', function () {
@@ -93,7 +100,8 @@ it('regenerates session on login', function () {
             'email' => $user->email,
             'password' => 'password123',
         ])
-        ->assertOk();
+        ->assertOk()
+        ->assertJson(['message' => 'Login successful']);
 
     expect(session()->getId())
         ->not->toBe($oldSessionId);

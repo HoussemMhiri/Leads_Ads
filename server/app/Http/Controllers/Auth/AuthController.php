@@ -30,6 +30,7 @@ class AuthController extends Controller
         Auth::login($user);
 
         return response()->json([
+            'message' => 'Registration successful',
             'user' => $this->userResource($user),
         ], 201);
     }
@@ -52,6 +53,7 @@ class AuthController extends Controller
         $request->session()->regenerate();
 
         return response()->json([
+            'message' => 'Login successful',
             'user' => $this->userResource(Auth::user()),
         ]);
     }
@@ -66,7 +68,9 @@ class AuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return response()->noContent();
+        return response()->json([
+            'message' => 'Logout successful',
+        ]);
     }
 
     /**
