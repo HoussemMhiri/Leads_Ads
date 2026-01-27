@@ -2,13 +2,18 @@ import AuthLayout from '@/layouts/AuthLayout.vue'
 import ForgetPasswordView from '@/views/ForgetPasswordView.vue'
 import SigninView from '@/views/SigninView.vue'
 import SignupView from '@/views/SignupView.vue'
+import DashboardView from '@/views/DashboardView.vue'
 
 import { createRouter, createWebHistory } from 'vue-router'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
-
+    {
+      path: '/',
+      name: 'dashboard',
+      component: DashboardView,
+    },
     {
       path: '/auth',
       component: AuthLayout,
