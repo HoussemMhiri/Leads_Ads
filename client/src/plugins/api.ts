@@ -1,6 +1,7 @@
+import router from '@/router'
 import axios, {  type InternalAxiosRequestConfig } from 'axios'
 
-const BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL || ''
+const BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL || 'http://localhost:8000'
 
 export const ENDPOINT_PREFIXES = {
   auth: '/api/auth',
@@ -59,7 +60,7 @@ api.interceptors.response.use(
        * - redirect to login
        */
       console.warn('Session expired - redirecting to login')
-      // window.location.href = '/login' // Uncomment when ready
+       router.push({ name: 'signin' })
     }
 
     return Promise.reject(error)

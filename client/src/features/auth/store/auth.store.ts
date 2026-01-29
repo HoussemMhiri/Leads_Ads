@@ -90,7 +90,7 @@ export const useAuthStore = defineStore('authStore', () => {
     hasError,
     
     // Actions
- register,
+    register,
     login,
     logout,
     clearErrors,

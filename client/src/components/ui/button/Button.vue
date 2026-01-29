@@ -1,4 +1,3 @@
-<!-- @/components/ui/button/Button.vue -->
 <script setup lang="ts">
 import type { PrimitiveProps } from 'reka-ui'
 import type { HTMLAttributes } from 'vue'
