@@ -21,7 +21,7 @@
       </p>
 
       <!-- Error message from store -->
-      <ErrorMessage :message="error" />
+      <AlertMessage :message="error" type="error" />
 
       <Button
         type="submit"
@@ -70,9 +70,9 @@ import { storeToRefs } from 'pinia'
 import Button from '@/components/ui/button/Button.vue'
 import TextField from '@/components/forms/TextField.vue'
 import GoogleIcon from '@/assets/icons/socials/GoogleIcon.vue'
-import ErrorMessage from '@/components/shared/ErrorMessage.vue'
 import { loginSchema } from '../schemas/auth.schema'
 import { useAuthStore } from '../store/auth.store'
+import AlertMessage from '@/components/shared/AlertMessage.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
