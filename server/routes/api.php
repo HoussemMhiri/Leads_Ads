@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\PasswordResetController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 
@@ -26,4 +27,9 @@ Route::prefix('auth')->controller(AuthController::class)->group(function () {
     Route::post('/reset-password', [PasswordResetController::class, 'reset'])
         ->middleware('guest')
         ->name('password.update');
+
+    //  Protected route to get current user
+    Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+        return response()->json(['user' => $request->user()]);
+    });
 });

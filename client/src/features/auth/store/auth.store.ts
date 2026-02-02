@@ -63,6 +63,30 @@ export const useAuthStore = defineStore('authStore', () => {
     }
   }
 
+  //  Verify current session is valid
+  const verifySession = async () => {
+    try {
+      const response = await authService.getCurrentUser()
+      authUser.value = response.user
+      return response
+    } catch (error) {
+      authUser.value = null
+      throw error
+    }
+  }
+
+  //  Initialize auth state on app load
+  const initializeAuth = async () => {
+    isLoading.value = true
+    try {
+      await verifySession()
+    } catch (error) {
+      // Session invalid or not logged in - this is fine
+      authUser.value = null
+    } finally {
+      isLoading.value = false
+    }
+  }
   // Actions
   const register = async (data: RegisterData) => {
     return withLoading(async () => {
@@ -85,11 +109,21 @@ export const useAuthStore = defineStore('authStore', () => {
   }
 
   const logout = async () => {
-    return withLoading(async () => {
-      const response = await authService.logoutUser()
+    isLoading.value = true
+    clearErrors()
+
+    try {
+      await authService.logoutUser()
+    } catch (err: any) {
+      // If session already expired (401), don't show error
+      const parsedError = parseApiError(err)
+      if (parsedError.statusCode !== 401) {
+        setError(parsedError)
+      }
+    } finally {
       authUser.value = null
-      return response
-    })
+      isLoading.value = false
+    }
   }
 
   const sendPasswordResetLink = async (data: ForgotPasswordData) => {
@@ -133,5 +167,6 @@ export const useAuthStore = defineStore('authStore', () => {
     sendPasswordResetLink,
     clearMessages,
     resetPassword,
+    initializeAuth,
   }
 })

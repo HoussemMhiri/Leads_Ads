@@ -8,6 +8,7 @@ import type {
   ForgotPasswordResponse,
   ResetPasswordData,
   ResetPasswordResponse,
+  User,
 } from '@/features/auth/types/auth.types'
 
 export const authService = {
@@ -61,5 +62,11 @@ export const authService = {
       console.error('Reset password failed:', error)
       throw error
     }
+  },
+
+  //  Get current authenticated user
+  async getCurrentUser(): Promise<{ user: User }> {
+    const response = await api.get('/user', { prefix: 'auth', skipAuthRedirect: true })
+    return response.data
   },
 }

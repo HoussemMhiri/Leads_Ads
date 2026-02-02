@@ -1,5 +1,5 @@
 import router from '@/router'
-import axios, {  type InternalAxiosRequestConfig } from 'axios'
+import axios, { type InternalAxiosRequestConfig } from 'axios'
 
 const BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL || 'http://localhost:8000'
 
@@ -13,6 +13,7 @@ export const ENDPOINT_PREFIXES = {
 declare module 'axios' {
   export interface AxiosRequestConfig {
     prefix?: keyof typeof ENDPOINT_PREFIXES
+    skipAuthRedirect?: boolean
   }
 }
 
@@ -51,16 +52,30 @@ api.interceptors.request.use(
 // --------------------
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
+
+  async (error) => {
+    // Skip auto-redirect if flag is set
+    if (error.config?.skipAuthRedirect) {
+      return Promise.reject(error)
+    }
+
     if (error.response?.status === 401) {
-      /**
-       * Session expired / unauthenticated
-       * Later:
-       * - reset auth store
-       * - redirect to login
-       */
-      console.warn('Session expired - redirecting to login')
-       router.push({ name: 'signin' })
+      const { useAuthStore } = await import('@/features/auth/store/auth.store')
+      const authStore = useAuthStore()
+
+      authStore.authUser = null
+      authStore.clearErrors()
+
+      // Redirect to login (avoid redirect loops)
+      const currentRoute = router.currentRoute.value.name
+      const authRoutes = ['signin', 'signup', 'forgotPassword', 'resetPassword']
+
+      if (!authRoutes.includes(currentRoute as string)) {
+        await router.push({
+          name: 'signin',
+          query: { redirect: router.currentRoute.value.fullPath },
+        })
+      }
     }
 
     return Promise.reject(error)
