@@ -69,4 +69,16 @@ export const authService = {
     const response = await api.get('/user', { prefix: 'auth', skipAuthRedirect: true })
     return response.data
   },
+
+  // Google OAuth redirect URL — page navigation, must be the actual backend origin.
+  getGoogleAuthUrl(): string {
+    const BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL || 'http://localhost:8000'
+    return `${BASE_URL}api/auth/google`
+  },
+
+  // Exchange the one-time code from the OAuth callback for a session.
+  async exchangeGoogleCode(code: string): Promise<AuthResponse> {
+    const res = await api.post<AuthResponse>('/google/exchange', { code }, { prefix: 'auth' })
+    return res.data
+  },
 }

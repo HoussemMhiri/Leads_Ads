@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\Auth\SocialAuthController;
 use App\Http\Controllers\Auth\PasswordResetController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -27,6 +28,13 @@ Route::prefix('auth')->controller(AuthController::class)->group(function () {
     Route::post('/reset-password', [PasswordResetController::class, 'reset'])
         ->middleware('guest')
         ->name('password.update');
+
+ // Google OAuth routes
+    Route::controller(SocialAuthController::class)->group(function () {
+        Route::get('google', 'redirect')->name('google.redirect');
+        Route::get('google/callback', 'callback')->name('google.callback');
+        Route::post('google/exchange', 'exchange')->name('google.exchange');
+    });
 
     //  Protected route to get current user
     Route::middleware('auth:sanctum')->get('/user', function (Request $request) {

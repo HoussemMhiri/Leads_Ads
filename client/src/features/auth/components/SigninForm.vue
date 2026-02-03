@@ -42,6 +42,7 @@
 
       <Button
         type="button"
+        @click="handleGoogleLogin"
         class="w-full mt-4 h-10 rounded-2xl bg-border text-black hover:bg-gray-hover cursor-pointer"
         :disabled="isLoading"
       >
@@ -73,6 +74,7 @@ import GoogleIcon from '@/assets/icons/socials/GoogleIcon.vue'
 import { loginSchema } from '../schemas/auth.schema'
 import { useAuthStore } from '../store/auth.store'
 import AlertMessage from '@/components/shared/AlertMessage.vue'
+import { authService } from '../services/auth.service'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -95,4 +97,9 @@ const onSubmit = handleSubmit(async (values) => {
     console.error('Login failed:', error)
   }
 })
+
+const handleGoogleLogin = () => {
+  const googleAuthUrl = authService.getGoogleAuthUrl()
+  window.location.href = googleAuthUrl
+}
 </script>

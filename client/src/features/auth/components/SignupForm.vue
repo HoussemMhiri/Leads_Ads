@@ -39,6 +39,7 @@
 
     <Button
       type="button"
+        @click="handleGoogleLogin"
       class="w-full mt-4 h-10 rounded-2xl bg-border text-black hover:bg-gray-hover cursor-pointer"
       :disabled="isLoading"
     >
@@ -69,6 +70,7 @@ import { signupSchema } from '../schemas/auth.schema'
 import { useAuthStore } from '../store/auth.store'
 import { storeToRefs } from 'pinia'
 import AlertMessage from '@/components/shared/AlertMessage.vue'
+import { authService } from '../services/auth.service'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -93,4 +95,9 @@ const onSubmit = handleSubmit(async (values) => {
     console.error('Registration failed:', error)
   }
 })
+
+const handleGoogleLogin = () => {
+  const googleAuthUrl = authService.getGoogleAuthUrl()
+  window.location.href = googleAuthUrl
+}
 </script>

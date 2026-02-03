@@ -146,6 +146,16 @@ export const useAuthStore = defineStore('authStore', () => {
     })
   }
 
+  const exchangeGoogleCode = async (code: string) => {
+    return withLoading(async () => {
+      const response = await authService.exchangeGoogleCode(code)
+      if (response.user) {
+        authUser.value = response.user
+      }
+      return response
+    })
+  }
+
   return {
     // State
     authUser,
@@ -168,5 +178,6 @@ export const useAuthStore = defineStore('authStore', () => {
     clearMessages,
     resetPassword,
     initializeAuth,
+    exchangeGoogleCode,
   }
 })

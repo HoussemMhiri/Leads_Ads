@@ -7,6 +7,7 @@ import ResetPasswordView from '@/views/ResetPasswordView.vue'
 
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/features/auth/store/auth.store'
+import GoogleCallbackView from '@/views/GoogleCallbackView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -41,6 +42,12 @@ const router = createRouter({
           path: 'reset-password',
           name: 'resetPassword',
           component: ResetPasswordView,
+        },
+        {
+          path: 'google/callback', // NEW
+          name: 'googleCallback',
+          component: GoogleCallbackView,
+          meta: { requiresGuest: false }, // Override parent meta
         },
       ],
     },
