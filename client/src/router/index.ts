@@ -43,13 +43,12 @@ const router = createRouter({
           name: 'resetPassword',
           component: ResetPasswordView,
         },
-        {
-          path: 'google/callback', // NEW
-          name: 'googleCallback',
-          component: GoogleCallbackView,
-          meta: { requiresGuest: false }, // Override parent meta
-        },
       ],
+    },
+    {
+      path: '/auth/google/callback',
+      name: 'googleCallback',
+      component: GoogleCallbackView,
     },
   ],
 })

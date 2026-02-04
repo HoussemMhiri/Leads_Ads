@@ -73,7 +73,7 @@ export const authService = {
   // Google OAuth redirect URL — page navigation, must be the actual backend origin.
   getGoogleAuthUrl(): string {
     const BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL || 'http://localhost:8000'
-    return `${BASE_URL}api/auth/google`
+    return `${BASE_URL}/api/auth/google`
   },
 
   // Exchange the one-time code from the OAuth callback for a session.

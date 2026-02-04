@@ -39,7 +39,7 @@
 
     <Button
       type="button"
-        @click="handleGoogleLogin"
+      @click="handleGoogleLogin"
       class="w-full mt-4 h-10 rounded-2xl bg-border text-black hover:bg-gray-hover cursor-pointer"
       :disabled="isLoading"
     >
