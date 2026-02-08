@@ -26,7 +26,7 @@
       <Button
         type="submit"
         class="w-full mt-4 h-10 rounded-2xl cursor-pointer"
-        :disabled="isLoading"
+        :disabled="isLoading || hasErrors"
         :loading="isLoading"
       >
         {{ isLoading ? 'Logging in...' : 'Log in' }}
@@ -63,6 +63,7 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useForm } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
 import { useRouter, RouterLink } from 'vue-router'
@@ -80,7 +81,7 @@ const authStore = useAuthStore()
 
 const { isLoading, error } = storeToRefs(authStore)
 
-const { handleSubmit } = useForm({
+const { handleSubmit, errors } = useForm({
   validationSchema: toTypedSchema(loginSchema),
   initialValues: {
     email: '',
@@ -96,6 +97,8 @@ const onSubmit = handleSubmit(async (values) => {
     console.error('Login failed:', error)
   }
 })
+
+const hasErrors = computed(() => Object.keys(errors.value).length > 0)
 
 const handleGoogleLogin = () => authStore.initiateGoogleAuth()
 </script>
