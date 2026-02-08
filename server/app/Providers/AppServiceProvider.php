@@ -22,13 +22,45 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        RateLimiter::for('authLimiter', function (Request $request) {
-            return Limit::perMinute(5)->by($request->input('email') . $request->ip())->response(function ($request, $headers) {
-                return response()->json([
-                    'message' => 'Too many login attempts. Try again in 1 minute.',
-                    'retry_after' => $headers['Retry-After'] ?? 60,
-                ], 429, $headers);
-            });
-        });
+       $this->configureAuthRateLimiting();
+       $this->configurePasswordResetRateLimiting();
     }
+
+
+    protected function configureAuthRateLimiting(): void
+   {
+     RateLimiter::for('authLimiter', function (Request $request) {
+        $key = $request->input('email') 
+            ? $request->input('email') . '|' . $request->ip()
+            : $request->ip();
+
+        return Limit::perMinute(5)
+            ->by($key)
+            ->response(fn($request, $headers) => response()->json([
+                'message' => 'Too many login attempts. Please try again later.',
+                'retry_after' => $headers['Retry-After'] ?? 60,
+            ], 429, $headers));
+    });
+}
+
+protected function configurePasswordResetRateLimiting(): void
+{
+    RateLimiter::for('passwordReset', function (Request $request) {
+        return [
+            Limit::perMinute(3)
+                ->by($request->ip())
+                ->response(fn($request, $headers) => response()->json([
+                    'message' => 'Too many password reset requests. Please wait before trying again.',
+                    'retry_after' => $headers['Retry-After'] ?? 60,
+                ], 429, $headers)),
+            
+            Limit::perHour(5)
+                ->by(($request->input('email') ?? 'anonymous') . '|' . $request->ip())
+                ->response(fn($request, $headers) => response()->json([
+                    'message' => 'Too many password reset attempts for this email.',
+                    'retry_after' => $headers['Retry-After'] ?? 3600,
+                ], 429, $headers)),
+        ];
+    });
+}
 }

@@ -156,6 +156,11 @@ export const useAuthStore = defineStore('authStore', () => {
     })
   }
 
+  const initiateGoogleAuth = () => {
+    const googleAuthUrl = authService.getGoogleAuthUrl()
+    window.location.assign(googleAuthUrl)
+  }
+
   return {
     // State
     authUser,
@@ -179,5 +184,6 @@ export const useAuthStore = defineStore('authStore', () => {
     resetPassword,
     initializeAuth,
     exchangeGoogleCode,
+    initiateGoogleAuth,
   }
 })

@@ -14,30 +14,32 @@ Route::prefix('auth')->controller(AuthController::class)->group(function () {
         Route::post('login', 'login');
     });
 
-    // Protected routes
-    Route::middleware('auth:sanctum')->group(function () {
-        Route::post('logout', 'logout');
-    });
-
-    // Send password reset link
-    Route::post('/forgot-password', [PasswordResetController::class, 'sendResetLink'])
-        ->middleware('guest')
-        ->name('password.email');
-
-    // Reset password
-    Route::post('/reset-password', [PasswordResetController::class, 'reset'])
-        ->middleware('guest')
-        ->name('password.update');
+    
+     // Password reset with stricter rate limiting
+    Route::controller(PasswordResetController::class)
+        ->middleware(['throttle:passwordReset', 'guest'])
+        ->group(function () {
+            Route::post('/forgot-password', 'sendResetLink')
+                ->name('password.email');
+            Route::post('/reset-password', 'reset')
+                ->name('password.update');
+        });
+    
 
  // Google OAuth routes
     Route::controller(SocialAuthController::class)->group(function () {
         Route::get('google', 'redirect')->name('google.redirect');
         Route::get('google/callback', 'callback')->name('google.callback');
-        Route::post('google/exchange', 'exchange')->name('google.exchange');
+         Route::post('google/exchange', 'exchange')
+            ->middleware('throttle:authLimiter')
+            ->name('google.exchange');
     });
 
-    //  Protected route to get current user
-    Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-        return response()->json(['user' => $request->user()]);
+    // Protected routes
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::post('logout', [AuthController::class, 'logout']);
+        Route::get('/user', function (Request $request) {
+            return response()->json(['user' => $request->user()]);
+        });
     });
 });

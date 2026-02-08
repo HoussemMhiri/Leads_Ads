@@ -70,7 +70,6 @@ import { signupSchema } from '../schemas/auth.schema'
 import { useAuthStore } from '../store/auth.store'
 import { storeToRefs } from 'pinia'
 import AlertMessage from '@/components/shared/AlertMessage.vue'
-import { authService } from '../services/auth.service'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -96,8 +95,5 @@ const onSubmit = handleSubmit(async (values) => {
   }
 })
 
-const handleGoogleLogin = () => {
-  const googleAuthUrl = authService.getGoogleAuthUrl()
-  window.location.href = googleAuthUrl
-}
+const handleGoogleLogin = () => authStore.initiateGoogleAuth()
 </script>
