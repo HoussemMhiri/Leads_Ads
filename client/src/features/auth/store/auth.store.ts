@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { authService } from '@/features/auth/services/auth.service'
 import type {
   User,
@@ -16,7 +16,15 @@ export const useAuthStore = defineStore('authStore', () => {
   const error = ref<string | null>(null)
   const validationErrors = ref<Record<string, string[]>>({})
   const successMessage = ref<string | null>(null)
-  const registrationEmail = ref<string | null>(null)
+  const registrationEmail = ref<string | null>(sessionStorage.getItem('registrationEmail'))
+
+  watch(registrationEmail, (val) => {
+    if (val) {
+      sessionStorage.setItem('registrationEmail', val)
+    } else {
+      sessionStorage.removeItem('registrationEmail')
+    }
+  })
 
   // Computed
   const isAuthenticated = computed(() => authUser.value !== null)

@@ -13,10 +13,6 @@ class EmailVerificationController extends Controller
     {
         $user = User::findOrFail($request->route('id'));
 
-        if (! $request->hasValidSignature()) {
-            abort(403, 'Invalid or expired verification link.');
-        }
-
         $frontendUrl = config('app.frontend_url', 'http://localhost:5173');
 
         if ($user->hasVerifiedEmail()) {

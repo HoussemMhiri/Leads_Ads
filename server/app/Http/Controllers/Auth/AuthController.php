@@ -57,12 +57,12 @@ class AuthController extends Controller
 
         // Check if email is verified
         if (! $user->hasVerifiedEmail()) {
-            // Log them out immediately
             Auth::logout();
 
-            throw ValidationException::withMessages([
-                'email' => ['Please verify your email address before logging in.'],
-            ]);
+            return response()->json([
+                'message' => 'Please verify your email address before logging in.',
+                'email_not_verified' => true,
+            ], 403);
         }
 
         // Regenerate session to prevent fixation attacks

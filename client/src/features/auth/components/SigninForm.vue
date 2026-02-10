@@ -66,6 +66,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
+import axios from 'axios'
 import { useForm } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
 import { useRouter, RouterLink, useRoute } from 'vue-router'
@@ -96,8 +97,14 @@ const onSubmit = handleSubmit(async (values) => {
   try {
     await authStore.login(values)
     router.push({ name: 'dashboard' })
-  } catch (error) {
-    console.error('Login failed:', error)
+  } catch (err) {
+    if (axios.isAxiosError(err) && err.response?.status === 403 && err.response?.data?.email_not_verified) {
+      authStore.registrationEmail = values.email
+      authStore.clearMessages()
+      router.push({ name: 'verifyEmail' })
+      return
+    }
+    console.error('Login failed:', err)
   }
 })
 

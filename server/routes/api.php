@@ -34,6 +34,8 @@ Route::prefix('auth')->group(function () {
         Route::post('email/resend', 'resend')
             ->middleware(['auth:sanctum', 'throttle:6,1'])
             ->name('verification.send');
+        Route::post('resend-verification-email', 'resendByEmail')
+            ->middleware('throttle:3,1');
     });
 
     // Google OAuth routes
@@ -54,6 +56,3 @@ Route::prefix('auth')->group(function () {
         Route::get('user', [AuthController::class, 'user']);
     });
 });
-
-Route::post('resend-verification-email', [EmailVerificationController::class, 'resendByEmail'])
-    ->middleware('throttle:3,1');
