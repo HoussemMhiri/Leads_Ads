@@ -66,7 +66,6 @@
 
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
-import axios from 'axios'
 import { useForm } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
 import { useRouter, RouterLink, useRoute } from 'vue-router'
@@ -78,6 +77,7 @@ import GoogleIcon from '@/assets/icons/socials/GoogleIcon.vue'
 import { loginSchema } from '../schemas/auth.schema'
 import { useAuthStore } from '../store/auth.store'
 import AlertMessage from '@/components/shared/AlertMessage.vue'
+import { parseApiError } from '@/utils/handleApiError'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -98,7 +98,8 @@ const onSubmit = handleSubmit(async (values) => {
     await authStore.login(values)
     router.push({ name: 'dashboard' })
   } catch (err) {
-    if (axios.isAxiosError(err) && err.response?.status === 403 && err.response?.data?.email_not_verified) {
+    const parsed = parseApiError(err)
+    if (parsed.statusCode === 403) {
       authStore.registrationEmail = values.email
       authStore.clearMessages()
       router.push({ name: 'verifyEmail' })
