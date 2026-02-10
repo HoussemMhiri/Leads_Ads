@@ -22,6 +22,7 @@ export interface RegisterData extends LoginCredentials {
 export interface AuthResponse {
   message: string
   user?: User
+  email?: string
 }
 
 // Forgot Password Types
@@ -41,5 +42,13 @@ export interface ResetPasswordData {
 }
 
 export interface ResetPasswordResponse {
+  message: string
+}
+
+export interface ResendVerificationData {
+  email: string
+}
+
+export interface VerificationResponse {
   message: string
 }

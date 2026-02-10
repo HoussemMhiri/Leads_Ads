@@ -16,6 +16,7 @@ export const useAuthStore = defineStore('authStore', () => {
   const error = ref<string | null>(null)
   const validationErrors = ref<Record<string, string[]>>({})
   const successMessage = ref<string | null>(null)
+  const registrationEmail = ref<string | null>(null)
 
   // Computed
   const isAuthenticated = computed(() => authUser.value !== null)
@@ -91,9 +92,11 @@ export const useAuthStore = defineStore('authStore', () => {
   const register = async (data: RegisterData) => {
     return withLoading(async () => {
       const response = await authService.registerUser(data)
-      if (response.user) {
-        authUser.value = response.user
+      // Save email for verification page
+      if (response.email) {
+        registrationEmail.value = response.email
       }
+      // User won't be returned since they're not logged in yet
       return response
     })
   }
@@ -161,6 +164,17 @@ export const useAuthStore = defineStore('authStore', () => {
     window.location.assign(googleAuthUrl)
   }
 
+  const resendVerificationEmail = async (email: string) => {
+    return withLoading(async () => {
+      const response = await authService.resendVerificationEmail({ email })
+      if (response.message) {
+        setSuccessMessage(response.message)
+      }
+      return response
+    })
+  }
+
+
   return {
     // State
     authUser,
@@ -168,6 +182,7 @@ export const useAuthStore = defineStore('authStore', () => {
     error,
     validationErrors,
     successMessage,
+    registrationEmail,
 
     // Computed
     isAuthenticated,
@@ -181,9 +196,11 @@ export const useAuthStore = defineStore('authStore', () => {
     clearErrors,
     sendPasswordResetLink,
     clearMessages,
+    setSuccessMessage,
     resetPassword,
     initializeAuth,
     exchangeGoogleCode,
     initiateGoogleAuth,
+    resendVerificationEmail,
   }
 })

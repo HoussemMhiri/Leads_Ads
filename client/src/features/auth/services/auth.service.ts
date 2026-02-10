@@ -9,6 +9,8 @@ import type {
   ResetPasswordData,
   ResetPasswordResponse,
   User,
+  VerificationResponse,
+  ResendVerificationData,
 } from '@/features/auth/types/auth.types'
 
 export const authService = {
@@ -81,4 +83,15 @@ export const authService = {
     const res = await api.post<AuthResponse>('/google/exchange', { code }, { prefix: 'auth' })
     return res.data
   },
+
+  async resendVerificationEmail(data: ResendVerificationData): Promise<VerificationResponse> {
+    try {
+      const res = await api.post<VerificationResponse>('/api/resend-verification-email', data)
+      return res.data
+    } catch (error) {
+      console.error('Resend verification email failed:', error)
+      throw error
+    }
+  },
+
 }

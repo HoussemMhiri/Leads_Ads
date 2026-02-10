@@ -3,9 +3,10 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Auth\RegisterRequest;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Http\Requests\Auth\RegisterRequest;
 use App\Models\User;
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -21,18 +22,20 @@ class AuthController extends Controller
         $data = $request->validated();
 
         $user = User::create([
-            'name'     => $data['name'],
-            'email'    => $data['email'],
+            'name' => $data['name'],
+            'email' => $data['email'],
             'password' => Hash::make($data['password']),
         ]);
 
         // Log the user in (creates session)
-        Auth::login($user);
+        /*   Auth::login($user); */
+        event(new Registered($user));
 
         return response()->json([
-            'message' => 'Registration successful',
-            'user' => $this->userResource($user),
+            'message' => 'Registration successful! Please check your email to verify your account.',
+            'email' => $user->email,
         ], 201);
+
     }
 
     /**
@@ -43,9 +46,22 @@ class AuthController extends Controller
         $data = $request->validated();
 
         // Attempt to authenticate
-        if (!Auth::attempt($data)) {
+        if (! Auth::attempt($data)) {
             throw ValidationException::withMessages([
                 'email' => ['The provided credentials are incorrect.'],
+            ]);
+        }
+
+        // Get the authenticated user
+        $user = Auth::user();
+
+        // Check if email is verified
+        if (! $user->hasVerifiedEmail()) {
+            // Log them out immediately
+            Auth::logout();
+
+            throw ValidationException::withMessages([
+                'email' => ['Please verify your email address before logging in.'],
             ]);
         }
 
@@ -63,7 +79,7 @@ class AuthController extends Controller
      */
     public function logout(Request $request)
     {
-        Auth::guard("web")->logout();
+        Auth::guard('web')->logout();
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();
@@ -89,8 +105,8 @@ class AuthController extends Controller
     private function userResource(User $user): array
     {
         return [
-            'id'    => $user->id,
-            'name'  => $user->name,
+            'id' => $user->id,
+            'name' => $user->name,
             'email' => $user->email,
         ];
     }

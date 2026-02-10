@@ -1,9 +1,9 @@
 <?php
 
 use App\Http\Controllers\Auth\AuthController;
-use App\Http\Controllers\Auth\SocialAuthController;
+use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\Auth\PasswordResetController;
-use Illuminate\Http\Request;
+use App\Http\Controllers\Auth\SocialAuthController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('auth')->group(function () {
@@ -26,6 +26,16 @@ Route::prefix('auth')->group(function () {
                 ->name('password.update');
         });
 
+    // Email verification routes
+    Route::controller(EmailVerificationController::class)->group(function () {
+        Route::get('email/verify/{id}/{hash}', 'verify')
+            ->middleware(['signed'])
+            ->name('verification.verify');
+        Route::post('email/resend', 'resend')
+            ->middleware(['auth:sanctum', 'throttle:6,1'])
+            ->name('verification.send');
+    });
+
     // Google OAuth routes
     Route::controller(SocialAuthController::class)
         ->middleware('throttle:authLimiter')
@@ -44,3 +54,6 @@ Route::prefix('auth')->group(function () {
         Route::get('user', [AuthController::class, 'user']);
     });
 });
+
+Route::post('resend-verification-email', [EmailVerificationController::class, 'resendByEmail'])
+    ->middleware('throttle:3,1');

@@ -1,6 +1,8 @@
 <template>
   <div>
     <form @submit="onSubmit" class="space-y-4">
+      <AlertMessage v-if="successMessage" :message="successMessage" type="success" />
+
       <TextField
         name="email"
         label="Email"
@@ -63,10 +65,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useForm } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
-import { useRouter, RouterLink } from 'vue-router'
+import { useRouter, RouterLink, useRoute } from 'vue-router'
 import { storeToRefs } from 'pinia'
 
 import Button from '@/components/ui/button/Button.vue'
@@ -78,8 +80,9 @@ import AlertMessage from '@/components/shared/AlertMessage.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const route = useRoute()
 
-const { isLoading, error } = storeToRefs(authStore)
+const { isLoading, error, successMessage } = storeToRefs(authStore)
 
 const { handleSubmit, errors } = useForm({
   validationSchema: toTypedSchema(loginSchema),
@@ -101,4 +104,16 @@ const onSubmit = handleSubmit(async (values) => {
 const hasErrors = computed(() => Object.keys(errors.value).length > 0)
 
 const handleGoogleLogin = () => authStore.initiateGoogleAuth()
+
+onMounted(() => {
+  authStore.clearMessages()
+
+  const verified = route.query.verified as string
+
+  if (verified === 'success') {
+    authStore.setSuccessMessage('Email verified successfully! You can now log in.')
+  } else if (verified === 'already') {
+    authStore.setSuccessMessage('Email already verified. You can log in.')
+  }
+})
 </script>

@@ -59,7 +59,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useForm } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
 import { useRouter, RouterLink } from 'vue-router'
@@ -90,7 +90,8 @@ const { handleSubmit, errors } = useForm({
 const onSubmit = handleSubmit(async (values) => {
   try {
     await authStore.register(values)
-    router.push({ name: 'dashboard' })
+    // Redirect to verify email page instead of dashboard
+    router.push({ name: 'verifyEmail' })
   } catch (error) {
     console.error('Registration failed:', error)
   }
@@ -99,4 +100,8 @@ const onSubmit = handleSubmit(async (values) => {
 const hasErrors = computed(() => Object.keys(errors.value).length > 0)
 
 const handleGoogleLogin = () => authStore.initiateGoogleAuth()
+
+onMounted(() => {
+  authStore.clearMessages()
+})
 </script>
