@@ -4,15 +4,20 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\Tenancy\CreateTenantService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
 
 class SocialAuthController extends Controller
 {
+    public function __construct(
+        private CreateTenantService $createTenantService,
+    ) {}
+
     /**
      * Redirect to Google OAuth
      */
@@ -39,8 +44,10 @@ class SocialAuthController extends Controller
                 ->user();
 
             $user = User::where('email', $googleUser->getEmail())->first();
+            $isNewUser = false;
 
-            if (!$user) {
+            if (! $user) {
+                $isNewUser = true;
                 $user = User::create([
                     'name' => $googleUser->getName(),
                     'email' => $googleUser->getEmail(),
@@ -50,7 +57,7 @@ class SocialAuthController extends Controller
                     'password' => Hash::make(Str::random(24)),
                 ]);
             } else {
-                if (!$user->google_id) {
+                if (! $user->google_id) {
                     $user->update([
                         'google_id' => $googleUser->getId(),
                         'avatar' => $googleUser->getAvatar(),
@@ -58,14 +65,25 @@ class SocialAuthController extends Controller
                 }
             }
 
-            $code = Str::random(40);
-            cache()->put('google_auth_' . $code, $user->id, now()->addMinutes(5));
+            if ($isNewUser) {
+                $tenantResult = $this->createTenantService->execute($user);
+            }
 
-            return redirect(env('FRONTEND_URL') . '/auth/google/callback?code=' . $code);
+            $code = Str::random(40);
+            cache()->put('google_auth_'.$code, $user->id, now()->addMinutes(5));
+
+            $redirectUrl = config('app.frontend_url').'/auth/google/callback?code='.$code;
+
+            if ($isNewUser && isset($tenantResult)) {
+                $redirectUrl .= '&subdomain='.$tenantResult['subdomain'];
+            }
+
+            return redirect($redirectUrl);
 
         } catch (\Exception $e) {
             Log::error('Google OAuth callback failed', ['exception' => $e]);
-            return redirect(env('FRONTEND_URL') . '/auth/google/callback?error=authentication_failed');
+
+            return redirect(config('app.frontend_url').'/auth/google/callback?error=authentication_failed');
         }
     }
 
@@ -77,23 +95,32 @@ class SocialAuthController extends Controller
     public function exchange(Request $request)
     {
         $code = $request->input('code');
-        $userId = cache()->pull('google_auth_' . $code);
+        $userId = cache()->pull('google_auth_'.$code);
 
-        if (!$userId) {
+        if (! $userId) {
             return response()->json(['error' => 'Invalid or expired code'], 401);
         }
 
         $user = User::find($userId);
         Auth::login($user);
 
+        $userData = [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'avatar' => $user->avatar,
+        ];
+
+        if ($user->tenant_id) {
+            $userData['tenant'] = [
+                'id' => $user->tenant_id,
+                'subdomain' => $user->tenant->domains->first()?->domain,
+            ];
+        }
+
         return response()->json([
             'message' => 'Authenticated',
-            'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'avatar' => $user->avatar,
-            ],
+            'user' => $userData,
         ]);
     }
 }

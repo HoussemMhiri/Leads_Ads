@@ -68,7 +68,7 @@ export function parseApiError(error: unknown): ParsedError {
 
     case 422: // Laravel validation errors
       return {
-        message: data?.message || getFirstValidationError(data?.errors) || 'Validation failed.',
+        message: getAllValidationErrors(data?.errors) || data?.message || 'Validation failed.',
         fieldErrors: data?.errors || {},
         statusCode: 422,
       }
@@ -99,15 +99,13 @@ export function parseApiError(error: unknown): ParsedError {
 }
 
 /**
- * Get the first validation error message
+ * Get all validation error messages joined together
  */
-function getFirstValidationError(errors?: Record<string, string[]>): string | null {
+function getAllValidationErrors(errors?: Record<string, string[]>): string | null {
   if (!errors) return null
 
-  const firstErrorArray = Object.values(errors)[0]
-  if (!Array.isArray(firstErrorArray)) return null
-
-  return firstErrorArray[0] ?? null  
+  const messages = Object.values(errors).flat()
+  return messages.length > 0 ? messages.join('\n') : null
 }
 
 

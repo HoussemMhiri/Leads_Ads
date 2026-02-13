@@ -1,6 +1,9 @@
 <template>
   <div v-if="message" class="p-3 rounded-lg border" :class="containerClass" role="alert">
-    <p class="text-sm" :class="textClass">
+    <ul v-if="lines.length > 1" class="text-sm list-disc list-inside space-y-1" :class="textClass">
+      <li v-for="(line, i) in lines" :key="i">{{ line }}</li>
+    </ul>
+    <p v-else class="text-sm" :class="textClass">
       {{ message }}
     </p>
   </div>
@@ -17,6 +20,10 @@ const props = defineProps<{
 }>()
 
 const type = computed(() => props.type ?? 'error')
+
+const lines = computed(() =>
+  props.message ? props.message.split('\n').filter(Boolean) : [],
+)
 
 const containerClass = computed(() => {
   switch (type.value) {

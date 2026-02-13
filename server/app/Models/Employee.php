@@ -2,37 +2,40 @@
 
 namespace App\Models;
 
-use App\Notifications\ResetPasswordNotification;
-use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Spatie\Permission\Traits\HasRoles;
 
-class User extends Authenticatable implements MustVerifyEmail
+class Employee extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasApiTokens, HasFactory,  Notifiable;
+    use HasApiTokens, HasFactory, HasRoles, Notifiable;
+
+    protected string $guard_name = 'employee';
 
     /**
      * The attributes that are mass assignable.
      *
-     * @var list<string>
+     * @var array<int, string>
      */
     protected $fillable = [
         'name',
         'email',
-        'google_id',
-        'avatar',
         'password',
-        'tenant_id',
+        'role',
+        'avatar',
+        'phone',
 
+        'invited_by',
+        'invited_at',
+        'email_verified_at',
     ];
 
     /**
      * The attributes that should be hidden for serialization.
      *
-     * @var list<string>
+     * @var array<int, string>
      */
     protected $hidden = [
         'password',
@@ -48,23 +51,24 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return [
             'email_verified_at' => 'datetime',
+            'invited_at' => 'datetime',
             'password' => 'hashed',
         ];
     }
 
     /**
-     * Send the password reset notification.
+     * Get the employee who invited this employee.
      */
-    public function sendPasswordResetNotification($token): void
+    public function inviter()
     {
-        $this->notify(new ResetPasswordNotification($token));
+        return $this->belongsTo(Employee::class, 'invited_by');
     }
 
     /**
-     * Get the tenant that owns this user.
+     * Get all employees invited by this employee.
      */
-    public function tenant()
+    public function invitedEmployees()
     {
-        return $this->belongsTo(Tenant::class);
+        return $this->hasMany(Employee::class, 'invited_by');
     }
 }

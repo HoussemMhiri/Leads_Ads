@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Models\User;
+use App\Services\Tenancy\CreateTenantService;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -14,8 +15,12 @@ use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
+    public function __construct(
+        private CreateTenantService $createTenantService,
+    ) {}
+
     /**
-     * Register a new user and log them in
+     * Register a new user and create their tenant
      */
     public function register(RegisterRequest $request)
     {
@@ -27,15 +32,15 @@ class AuthController extends Controller
             'password' => Hash::make($data['password']),
         ]);
 
-        // Log the user in (creates session)
-        /*   Auth::login($user); */
+        $tenantResult = $this->createTenantService->execute($user);
+
         event(new Registered($user));
 
         return response()->json([
             'message' => 'Registration successful! Please check your email to verify your account.',
             'email' => $user->email,
+            'subdomain' => $tenantResult['subdomain'],
         ], 201);
-
     }
 
     /**
@@ -104,10 +109,19 @@ class AuthController extends Controller
      */
     private function userResource(User $user): array
     {
-        return [
+        $data = [
             'id' => $user->id,
             'name' => $user->name,
             'email' => $user->email,
         ];
+
+        if ($user->tenant_id) {
+            $data['tenant'] = [
+                'id' => $user->tenant_id,
+                'subdomain' => $user->tenant->domains->first()?->domain,
+            ];
+        }
+
+        return $data;
     }
 }
