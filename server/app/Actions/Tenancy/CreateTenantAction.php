@@ -19,7 +19,7 @@ class CreateTenantAction
         // Check if a tenant with this DB name exists
         if (Tenant::where('tenancy_db_name', $baseDbName)->exists()) {
             // Add a short random string to make it unique
-            $baseDbName .= '_'.Str::lower(Str::random(4));
+            $baseDbName .= '-'.Str::lower(Str::random(4));
         }
 
         // Create the tenant

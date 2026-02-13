@@ -8,6 +8,7 @@ use App\Http\Requests\Auth\RegisterRequest;
 use App\Models\User;
 use App\Services\Tenancy\CreateTenantService;
 use Illuminate\Auth\Events\Registered;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -26,11 +27,21 @@ class AuthController extends Controller
     {
         $data = $request->validated();
 
-        $user = User::create([
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'password' => Hash::make($data['password']),
-        ]);
+        try {
+            $user = User::create([
+                'name' => $data['name'],
+                'email' => $data['email'],
+                'password' => Hash::make($data['password']),
+            ]);
+        } catch (QueryException $e) {
+            if ($e->errorInfo[1] == 1062 || $e->errorInfo[1] == 2067) {
+                throw ValidationException::withMessages([
+                    'email' => ['An account with this email or name already exists.'],
+                ]);
+            }
+
+            throw $e;
+        }
 
         $tenantResult = $this->createTenantService->execute($user);
 

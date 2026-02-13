@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use App\Services\Tenancy\CreateTenantService;
 use Illuminate\Support\Facades\Hash;
 
 beforeEach(function () {
@@ -17,7 +18,14 @@ function withCsrfHeaders()
         ->withSession(['_token' => test()->csrfToken]);
 }
 
-it('registers a user and logs them in', function () {
+it('registers a user and creates a tenant', function () {
+    $this->mock(CreateTenantService::class, function ($mock) {
+        $mock->shouldReceive('execute')->once()->andReturn([
+            'tenant' => null,
+            'subdomain' => 'houssem',
+        ]);
+    });
+
     $payload = [
         'name' => 'Houssem',
         'email' => 'houssem@test.com',
@@ -30,13 +38,13 @@ it('registers a user and logs them in', function () {
         ->assertCreated()
         ->assertJsonStructure([
             'message',
-            'user' => ['id', 'name', 'email']
+            'email',
+            'subdomain',
         ])
-        ->assertJson(['message' => 'Registration successful'])
+        ->assertJson(['message' => 'Registration successful! Please check your email to verify your account.'])
         ->assertJsonMissing(['token']);
 
-    $this->assertDatabaseHas('users', ['email' => 'houssem@test.com'])
-        ->assertAuthenticated();
+    $this->assertDatabaseHas('users', ['email' => 'houssem@test.com']);
 });
 
 it('logs in a user and creates a session', function () {
@@ -52,7 +60,7 @@ it('logs in a user and creates a session', function () {
         ->assertOk()
         ->assertJsonStructure([
             'message',
-            'user' => ['id', 'name', 'email']
+            'user' => ['id', 'name', 'email'],
         ])
         ->assertJson(['message' => 'Login successful'])
         ->assertJsonMissing(['token']);
