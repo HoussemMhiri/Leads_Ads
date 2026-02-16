@@ -1,6 +1,11 @@
 <template>
   <form @submit="onSubmit" class="space-y-4">
-    <TextField name="name" label="Name" placeholder="Your name" :disabled="isLoading" />
+    <TextField
+      name="name"
+      label="Name (Individual or Company)"
+      placeholder="Your name"
+      :disabled="isLoading"
+    />
 
     <TextField
       name="email"

@@ -5,6 +5,7 @@ const BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL || 'http://localhost:8000
 
 export const ENDPOINT_PREFIXES = {
   auth: '/api/auth',
+  employees: '/api/employees',
   connections: '/api/meta/connections',
   campaigns: '/api/meta/campaigns',
 } as const

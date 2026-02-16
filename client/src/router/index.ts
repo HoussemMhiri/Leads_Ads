@@ -55,6 +55,11 @@ const router = createRouter({
       name: 'googleCallback',
       component: GoogleCallbackView,
     },
+    {
+      path: '/invitation/accept',
+      name: 'acceptInvitation',
+      component: () => import('@/views/AcceptInvitationView.vue'),
+    },
   ],
 })
 

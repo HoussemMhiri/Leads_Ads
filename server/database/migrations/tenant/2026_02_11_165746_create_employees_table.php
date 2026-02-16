@@ -16,12 +16,13 @@ return new class extends Migration
             $table->string('name');
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
-            $table->string('password');
+            $table->string('password')->nullable();
             $table->string('role')->default('member'); // admin, member, viewer
             $table->string('avatar')->nullable();
             $table->string('phone')->nullable();
             $table->foreignId('invited_by')->nullable()->constrained('employees')->onDelete('set null');
             $table->timestamp('invited_at')->nullable();
+            $table->timestamp('invitation_accepted_at')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });

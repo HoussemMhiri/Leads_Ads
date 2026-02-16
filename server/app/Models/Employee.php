@@ -29,6 +29,7 @@ class Employee extends Authenticatable
 
         'invited_by',
         'invited_at',
+        'invitation_accepted_at',
         'email_verified_at',
     ];
 
@@ -52,8 +53,22 @@ class Employee extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'invited_at' => 'datetime',
+            'invitation_accepted_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function isPending(): bool
+    {
+        return is_null($this->invitation_accepted_at);
+    }
+
+    public function markInvitationAccepted(): void
+    {
+        $this->update([
+            'invitation_accepted_at' => now(),
+            'email_verified_at' => now(),
+        ]);
     }
 
     /**

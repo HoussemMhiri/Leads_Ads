@@ -4,6 +4,7 @@ use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\Auth\SocialAuthController;
+use App\Http\Controllers\Employee\EmployeeInvitationController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('auth')->group(function () {
@@ -55,4 +56,19 @@ Route::prefix('auth')->group(function () {
         Route::post('logout', [AuthController::class, 'logout']);
         Route::get('user', [AuthController::class, 'user']);
     });
+});
+
+// Employee invitation routes
+Route::prefix('employees')->group(function () {
+    Route::post('invite', [EmployeeInvitationController::class, 'invite'])
+        ->middleware(['auth:sanctum', 'throttle:10,1'])
+        ->name('employee.invite');
+
+    Route::get('invitation/{tenant}/{employee}/accept', [EmployeeInvitationController::class, 'show'])
+        ->middleware('signed')
+        ->name('employee.invitation.show');
+
+    Route::post('invitation/{tenant}/{employee}/accept', [EmployeeInvitationController::class, 'accept'])
+        ->middleware('signed')
+        ->name('employee.invitation.accept');
 });
