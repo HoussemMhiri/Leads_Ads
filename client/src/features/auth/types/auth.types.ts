@@ -1,3 +1,9 @@
+export interface Tenant {
+  id: number
+  name: string
+  subdomain: string
+}
+
 export interface User {
   id: number
   name: string
@@ -7,6 +13,7 @@ export interface User {
   email_verified_at: string | null
   created_at: string | null
   updated_at: string | null
+  tenant?: Tenant | null
 }
 
 export interface LoginCredentials {

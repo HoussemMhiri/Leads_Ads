@@ -1,0 +1,249 @@
+<template>
+  <Sidebar collapsible="icon">
+    <!-- ── Header: tenant logo + name ── -->
+    <SidebarHeader>
+      <SidebarMenu>
+        <SidebarMenuItem>
+          <SidebarMenuButton size="lg" class="cursor-default">
+            <div
+              class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-sm shrink-0"
+            >
+              {{ tenantInitial }}
+            </div>
+            <div class="flex flex-col gap-0.5 leading-none overflow-hidden">
+              <span class="font-semibold truncate">{{ tenantName }}</span>
+              <span class="text-xs text-muted-foreground truncate">Workspace</span>
+            </div>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      </SidebarMenu>
+    </SidebarHeader>
+
+    <!-- ── Content: navigation ── -->
+    <SidebarContent>
+      <SidebarGroup>
+        <SidebarGroupContent>
+          <SidebarMenu>
+            <template v-for="item in navItems" :key="item.title">
+              <!-- Simple item (no children) -->
+              <SidebarMenuItem v-if="!item.children">
+                <SidebarMenuButton
+                  v-if="item.to"
+                  as-child
+                  :tooltip="item.title"
+                  :is-active="isRouteActive(item.to)"
+                >
+                  <RouterLink :to="item.to">
+                    <component :is="item.icon" />
+                    <span>{{ item.title }}</span>
+                  </RouterLink>
+                </SidebarMenuButton>
+                <SidebarMenuButton v-else :tooltip="item.title">
+                  <component :is="item.icon" />
+                  <span>{{ item.title }}</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+
+              <!-- Collapsible item (with children) -->
+              <CollapsibleRoot
+                v-else
+                :open="openItems[item.title]"
+                @update:open="openItems[item.title] = $event"
+                class="group/collapsible"
+              >
+                <SidebarMenuItem>
+                  <CollapsibleTrigger as-child>
+                    <SidebarMenuButton :tooltip="item.title">
+                      <component :is="item.icon" />
+                      <span>{{ item.title }}</span>
+                      <ChevronRight
+                        class="ml-auto size-4 shrink-0 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90"
+                      />
+                    </SidebarMenuButton>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <SidebarMenuSub>
+                      <SidebarMenuSubItem v-for="child in item.children" :key="child.title">
+                        <SidebarMenuSubButton
+                          v-if="child.to"
+                          as-child
+                          :is-active="isRouteActive(child.to)"
+                        >
+                          <RouterLink :to="child.to">{{ child.title }}</RouterLink>
+                        </SidebarMenuSubButton>
+                        <SidebarMenuSubButton v-else>
+                          {{ child.title }}
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                    </SidebarMenuSub>
+                  </CollapsibleContent>
+                </SidebarMenuItem>
+              </CollapsibleRoot>
+            </template>
+          </SidebarMenu>
+        </SidebarGroupContent>
+      </SidebarGroup>
+    </SidebarContent>
+
+    <!-- ── Footer: user info ── -->
+    <SidebarFooter>
+      <SidebarMenu>
+        <SidebarMenuItem>
+          <SidebarMenuButton size="lg">
+            <div
+              class="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary font-semibold text-sm shrink-0 overflow-hidden"
+            >
+              <img
+                v-if="userAvatar"
+                :src="userAvatar"
+                :alt="userName"
+                class="h-full w-full object-cover"
+              />
+              <span v-else>{{ userInitial }}</span>
+            </div>
+            <div class="flex flex-col gap-0.5 leading-none overflow-hidden">
+              <span class="font-medium truncate">{{ userName }}</span>
+              <span class="text-xs text-muted-foreground truncate">{{ userEmail }}</span>
+            </div>
+            <Settings class="ml-auto size-4 shrink-0 text-muted-foreground" />
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      </SidebarMenu>
+    </SidebarFooter>
+
+    <SidebarRail />
+  </Sidebar>
+</template>
+
+<script setup lang="ts">
+import { reactive, computed, watch } from 'vue'
+import { RouterLink, useRoute } from 'vue-router'
+import { CollapsibleRoot, CollapsibleTrigger, CollapsibleContent } from 'reka-ui'
+import {
+  LayoutDashboard,
+  Megaphone,
+  FolderOpen,
+  CalendarDays,
+  TrendingUp,
+  Send,
+  Share2,
+  Bell,
+  UserCircle,
+  Settings,
+  ChevronRight,
+} from 'lucide-vue-next'
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
+  SidebarRail,
+} from '@/components/ui/sidebar'
+import { useAuthStore } from '@/features/auth/store/auth.store'
+import { storeToRefs } from 'pinia'
+import type { RouteLocationRaw } from 'vue-router'
+
+// ── Auth ──────────────────────────────────────────────────────────────────────
+const authStore = useAuthStore()
+const { authUser } = storeToRefs(authStore)
+
+const userName = computed(() => authUser.value?.name ?? 'User')
+const userEmail = computed(() => authUser.value?.email ?? '')
+const userAvatar = computed(() => authUser.value?.avatar ?? null)
+const userInitial = computed(() => userName.value.charAt(0).toUpperCase())
+
+// ── Tenant (placeholder until tenant store exists) ────────────────────────────
+const tenantName = computed(() => authUser.value?.tenant?.subdomain ?? 'My Workspace')
+const tenantInitial = computed(() => tenantName.value.charAt(0).toUpperCase())
+
+// ── Navigation definition ─────────────────────────────────────────────────────
+interface NavChild {
+  title: string
+  to?: RouteLocationRaw
+}
+interface NavItem {
+  title: string
+  icon: object
+  to?: RouteLocationRaw
+  children?: NavChild[]
+}
+
+const navItems: NavItem[] = [
+  {
+    title: 'Dashboard',
+    icon: LayoutDashboard,
+    to: { name: 'dashboard' },
+  },
+  {
+    title: 'Ads',
+    icon: Megaphone,
+    children: [{ title: 'Meta Ads' }],
+  },
+  {
+    title: 'Media Library',
+    icon: FolderOpen,
+  },
+  {
+    title: 'Calendar',
+    icon: CalendarDays,
+  },
+  {
+    title: 'Campaign Analytics',
+    icon: TrendingUp,
+    children: [{ title: 'Meta' }, { title: 'Google' }, { title: 'TikTok' }],
+  },
+  {
+    title: 'Publishing',
+    icon: Send,
+    children: [{ title: 'Meta' }],
+  },
+  {
+    title: 'Social Accounts',
+    icon: Share2,
+    children: [{ title: 'Meta' }],
+  },
+  {
+    title: 'Notifications',
+    icon: Bell,
+  },
+  {
+    title: 'My Account',
+    icon: UserCircle,
+  },
+  {
+    title: 'Workspace Settings',
+    icon: Settings,
+  },
+]
+
+// ── Collapsible state ─────────────────────────────────────────────────────────
+const route = useRoute()
+
+const openItems = reactive<Record<string, boolean>>(
+  Object.fromEntries(
+    navItems
+      .filter((item) => item.children)
+      .map((item) => [
+        item.title,
+        item.children!.some((child) => child.to && route.path === child.to),
+      ]),
+  ),
+)
+
+// ── Active route helper ───────────────────────────────────────────────────────
+function isRouteActive(to?: RouteLocationRaw): boolean {
+  if (!to) return false
+  if (typeof to === 'string') return route.path === to
+  if ('name' in to && to.name) return route.name === to.name
+  if ('path' in to && to.path) return route.path === to.path
+  return false
+}
+</script>

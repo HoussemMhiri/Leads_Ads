@@ -1,4 +1,5 @@
 import AuthLayout from '@/layouts/AuthLayout.vue'
+import MainLayout from '@/layouts/MainLayout.vue'
 import ForgetPasswordView from '@/views/auth/ForgetPasswordView.vue'
 import SigninView from '@/views/auth/SigninView.vue'
 import SignupView from '@/views/auth/SignupView.vue'
@@ -14,9 +15,15 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      name: 'dashboard',
-      component: DashboardView,
+      component: MainLayout,
       meta: { requiresAuth: true },
+      children: [
+        {
+          path: '',
+          name: 'dashboard',
+          component: DashboardView,
+        },
+      ],
     },
     {
       path: '/auth',
