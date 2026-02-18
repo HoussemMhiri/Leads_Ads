@@ -1,13 +1,13 @@
 import AuthLayout from '@/layouts/AuthLayout.vue'
-import ForgetPasswordView from '@/views/ForgetPasswordView.vue'
-import SigninView from '@/views/SigninView.vue'
-import SignupView from '@/views/SignupView.vue'
+import ForgetPasswordView from '@/views/auth/ForgetPasswordView.vue'
+import SigninView from '@/views/auth/SigninView.vue'
+import SignupView from '@/views/auth/SignupView.vue'
 import DashboardView from '@/views/DashboardView.vue'
-import ResetPasswordView from '@/views/ResetPasswordView.vue'
+import ResetPasswordView from '@/views/auth/ResetPasswordView.vue'
 
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/features/auth/store/auth.store'
-import GoogleCallbackView from '@/views/GoogleCallbackView.vue'
+import GoogleCallbackView from '@/views/auth/GoogleCallbackView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -46,7 +46,7 @@ const router = createRouter({
         {
           path: 'verify-email',
           name: 'verifyEmail',
-          component: () => import('@/views/VerifyEmailView.vue'),
+          component: () => import('@/views/auth/VerifyEmailView.vue'),
         },
       ],
     },
@@ -58,7 +58,7 @@ const router = createRouter({
     {
       path: '/invitation/accept',
       name: 'acceptInvitation',
-      component: () => import('@/views/AcceptInvitationView.vue'),
+      component: () => import('@/views/auth/AcceptInvitationView.vue'),
     },
   ],
 })
