@@ -38,7 +38,7 @@
                     <span>{{ item.title }}</span>
                   </RouterLink>
                 </SidebarMenuButton>
-                <SidebarMenuButton v-else :tooltip="item.title">
+                <SidebarMenuButton v-else :tooltip="item.title" @click="item.action?.()">
                   <component :is="item.icon" />
                   <span>{{ item.title }}</span>
                 </SidebarMenuButton>
@@ -112,11 +112,16 @@
     </SidebarFooter>
 
     <SidebarRail />
+
+    <WorkspaceSettingsModal
+      :open="showWorkspaceSettings"
+      @update:open="showWorkspaceSettings = $event"
+    />
   </Sidebar>
 </template>
 
 <script setup lang="ts">
-import { reactive, computed, watch } from 'vue'
+import { reactive, computed, watch, ref } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import { CollapsibleRoot, CollapsibleTrigger, CollapsibleContent } from 'reka-ui'
 import {
@@ -150,6 +155,10 @@ import {
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { storeToRefs } from 'pinia'
 import type { RouteLocationRaw } from 'vue-router'
+import WorkspaceSettingsModal from '@/features/workspace/components/WorkspaceSettingsModal.vue'
+
+// ── Modal state ───────────────────────────────────────────────────────────────
+const showWorkspaceSettings = ref(false)
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
 const authStore = useAuthStore()
@@ -174,6 +183,7 @@ interface NavItem {
   icon: object
   to?: RouteLocationRaw
   children?: NavChild[]
+  action?: () => void
 }
 
 const navItems: NavItem[] = [
@@ -221,6 +231,7 @@ const navItems: NavItem[] = [
   {
     title: 'Workspace Settings',
     icon: Settings,
+    action: () => { showWorkspaceSettings.value = true },
   },
 ]
 

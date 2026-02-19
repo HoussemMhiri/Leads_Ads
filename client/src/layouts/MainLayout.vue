@@ -23,5 +23,5 @@
 import { RouterView } from 'vue-router'
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
 import { Separator } from '@/components/ui/separator'
-import AppSidebar from '@/components/shared/AppSidebar.vue'
+import AppSidebar from '@/components/navigation/AppSidebar.vue'
 </script>
