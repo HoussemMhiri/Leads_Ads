@@ -19,7 +19,7 @@
     <div class="flex justify-end">
       <button
         type="button"
-        class="px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
+        class="w-full sm:w-auto px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
       >
         Update
       </button>

@@ -47,34 +47,28 @@
       </div>
 
       <!-- Role select + Send button -->
-      <div class="flex items-center justify-between">
+      <div class="flex flex-col gap-3">
         <Select v-model="selectedRole" :disabled="rolesLoading">
-          <SelectTrigger class="w-36 capitalize">
+          <SelectTrigger class="w-full capitalize">
             <SelectValue placeholder="Role" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem
-              v-for="role in roles"
-              :key="role.id"
-              :value="role.name"
-              class="capitalize"
-            >
+            <SelectItem v-for="role in roles" :key="role.id" :value="role.name" class="capitalize">
               {{ role.name }}
             </SelectItem>
           </SelectContent>
         </Select>
         <button
           type="button"
-          :disabled="inviteEmails.length === 0 || rolesLoading"
+          :disabled="inviteEmails.length === 0"
           @click="handleSendInvitations"
-          class="px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          class="w-full px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {{ rolesLoading ? 'Sending…' : `Send Invitation${inviteEmails.length > 1 ? 's' : ''}` }}
+          Send Invitation{{ inviteEmails.length > 1 ? 's' : '' }}
         </button>
       </div>
     </div>
   </div>
-
 </template>
 
 <script setup lang="ts">
