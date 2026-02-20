@@ -15,7 +15,10 @@
       <!-- Email tag input -->
       <div class="space-y-1">
         <div
-          class="flex flex-wrap items-center gap-2 px-3 py-2 rounded-md border bg-background focus-within:ring-2 focus-within:ring-ring min-h-10"
+          :class="[
+            'flex flex-wrap items-center gap-2 px-3 py-2 rounded-md border bg-background focus-within:ring-2 focus-within:ring-ring min-h-10 transition-colors',
+            emailError ? 'border-destructive focus-within:ring-destructive/50' : '',
+          ]"
         >
           <span
             v-for="(email, index) in inviteEmails"
@@ -33,16 +36,18 @@
           </span>
           <input
             v-model="emailInput"
-            type="email"
+            type="text"
             placeholder="Type an email and press Enter"
             class="flex-1 min-w-32 py-0.5 text-sm outline-none border-none bg-transparent"
             @keydown.enter.prevent="addEmail"
             @keydown.tab.prevent="addEmail"
             @blur="addEmail"
+            @input="emailError = ''"
           />
         </div>
-        <p class="text-xs text-muted-foreground">
-          {{ inviteEmails.length }} email{{ inviteEmails.length !== 1 ? 's' : '' }} added
+        <p v-if="emailError" class="text-xs text-destructive">{{ emailError }}</p>
+        <p v-else class="text-xs text-muted-foreground">
+          {{ inviteEmails.length }}/20 email{{ inviteEmails.length !== 1 ? 's' : '' }} added
         </p>
       </div>
 
@@ -60,11 +65,11 @@
         </Select>
         <button
           type="button"
-          :disabled="inviteEmails.length === 0"
+          :disabled="inviteEmails.length === 0 || isSending"
           @click="handleSendInvitations"
           class="w-full px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Send Invitation{{ inviteEmails.length > 1 ? 's' : '' }}
+          {{ isSending ? 'Sending…' : `Send Invitation${inviteEmails.length > 1 ? 's' : ''}` }}
         </button>
       </div>
     </div>
@@ -75,6 +80,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useEmployeeStore } from '@/features/workspace/employee/store/employee.store'
+import { isValidEmail } from '@/utils/validators'
 import AlertMessage from '@/components/shared/AlertMessage.vue'
 import {
   Select,
@@ -101,16 +107,32 @@ onMounted(async () => {
 // ── Invite form ───────────────────────────────────────────────────────────────
 const inviteEmails = ref<string[]>([])
 const emailInput = ref('')
+const emailError = ref('')
 const inviteSuccess = ref('')
+const isSending = ref(false)
 
 const inviteError = computed(() => employeeStore.error)
 
 const addEmail = () => {
   const email = emailInput.value.trim().replace(/,$/, '')
-  if (email && !inviteEmails.value.includes(email)) {
-    inviteEmails.value.push(email)
+  if (!email) return
+
+  if (!isValidEmail(email)) {
+    emailError.value = 'Please enter a valid email address.'
+    return
   }
+  if (inviteEmails.value.includes(email)) {
+    emailError.value = 'This email has already been added.'
+    return
+  }
+  if (inviteEmails.value.length >= 20) {
+    emailError.value = 'You can invite up to 20 people at a time.'
+    return
+  }
+
+  inviteEmails.value.push(email)
   emailInput.value = ''
+  emailError.value = ''
 }
 
 const removeEmail = (index: number) => {
@@ -120,6 +142,7 @@ const removeEmail = (index: number) => {
 const handleSendInvitations = async () => {
   inviteSuccess.value = ''
   employeeStore.clearError()
+  isSending.value = true
 
   try {
     const result = await employeeStore.sendInvitations(inviteEmails.value, selectedRole.value)
@@ -136,6 +159,8 @@ const handleSendInvitations = async () => {
     inviteEmails.value = []
   } catch {
     // error already set in store
+  } finally {
+    isSending.value = false
   }
 }
 </script>

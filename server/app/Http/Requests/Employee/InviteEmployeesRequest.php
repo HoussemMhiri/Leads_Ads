@@ -15,7 +15,7 @@ class InviteEmployeesRequest extends FormRequest
     {
         return [
             'emails' => 'required|array|min:1|max:20',
-            'emails.*' => 'required|email|distinct',
+            'emails.*' => 'required|email:rfc,dns|distinct',
             'role' => 'nullable|string|in:admin,member,viewer',
         ];
     }
