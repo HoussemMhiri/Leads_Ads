@@ -11,7 +11,7 @@ class CreateTenantAction
      * Create a tenant with a subdomain and a DB name.
      * If the DB name already exists, append a random suffix.
      */
-    public function execute(string $subdomain, string $userName): Tenant
+    public function execute(string $subdomain, string $userName, int $userId): Tenant
     {
         // Base DB name from user name
         $baseDbName = 'tenant_'.Str::slug($userName);
@@ -22,9 +22,10 @@ class CreateTenantAction
             $baseDbName .= '-'.Str::lower(Str::random(4));
         }
 
-        // Create the tenant
+        // Create the tenant with its owner in one step
         $tenant = Tenant::create([
             'tenancy_db_name' => $baseDbName,
+            'user_id'         => $userId,
         ]);
 
         // Create the subdomain

@@ -17,6 +17,7 @@ class CreateTenantsTable extends Migration
             $table->string('id')->primary();
 
             $table->string('tenancy_db_name')->unique()->nullable();
+            $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('set null');
 
             $table->timestamps();
             $table->json('data')->nullable();

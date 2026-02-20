@@ -6,7 +6,7 @@
         <aside class="w-56 shrink-0 border-r flex flex-col bg-muted/30">
           <!-- Header -->
           <div class="px-4 py-4 border-b">
-            <h2 class="text-sm font-semibold text-foreground">Workspace Settings</h2>
+            <DialogTitle class="text-sm font-semibold text-foreground">Workspace Settings</DialogTitle>
           </div>
 
           <!-- Nav items -->
@@ -56,7 +56,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { Building2, ShieldCheck, Users, Globe, CalendarDays, Mail, X } from 'lucide-vue-next'
-import { Dialog, DialogContent, DialogClose } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogClose, DialogTitle } from '@/components/ui/dialog'
 import WorkspaceInfoSection from './sections/WorkspaceInfoSection.vue'
 import RolesSection from './sections/RolesSection.vue'
 import TeamSection from './sections/TeamSection.vue'

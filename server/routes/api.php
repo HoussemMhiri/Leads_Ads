@@ -60,6 +60,10 @@ Route::prefix('auth')->group(function () {
 
 // Employee invitation routes
 Route::prefix('employees')->group(function () {
+    Route::get('roles', [EmployeeInvitationController::class, 'roles'])
+        ->middleware(['auth:sanctum'])
+        ->name('employee.roles');
+
     Route::post('invite', [EmployeeInvitationController::class, 'invite'])
         ->middleware(['auth:sanctum', 'throttle:10,1'])
         ->name('employee.invite');

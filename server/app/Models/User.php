@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Notifications\ResetPasswordNotification;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -12,38 +13,21 @@ use Laravel\Sanctum\HasApiTokens;
 class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasApiTokens, HasFactory,  Notifiable;
+    use HasApiTokens, HasFactory, Notifiable;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
     protected $fillable = [
         'name',
         'email',
         'google_id',
         'avatar',
         'password',
-        'tenant_id',
-
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
@@ -52,19 +36,36 @@ class User extends Authenticatable implements MustVerifyEmail
         ];
     }
 
-    /**
-     * Send the password reset notification.
-     */
     public function sendPasswordResetNotification($token): void
     {
         $this->notify(new ResetPasswordNotification($token));
     }
 
+    // ── Relationships ──────────────────────────────────────────────────────────
+
     /**
-     * Get the tenant that owns this user.
+     * The tenant this user owns.
+     * FK: tenants.user_id → users.id
      */
-    public function tenant()
+    public function tenant(): HasOne
     {
-        return $this->belongsTo(Tenant::class);
+        return $this->hasOne(Tenant::class);
+    }
+
+    /**
+     * Access the user's employees through their tenant.
+     * Tenancy is initialized before querying.
+     */
+    public function employees()
+    {
+        $tenant = $this->tenant;
+
+        if (! $tenant) {
+            return collect();
+        }
+
+        tenancy()->initialize($tenant);
+
+        return Employee::query();
     }
 }

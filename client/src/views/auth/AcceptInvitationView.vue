@@ -85,8 +85,8 @@ import { toTypedSchema } from '@vee-validate/zod'
 import TextField from '@/components/forms/TextField.vue'
 import Button from '@/components/ui/button/Button.vue'
 import AlertMessage from '@/components/shared/AlertMessage.vue'
-import { employeeService } from '@/features/employee/services/employee.service'
-import { acceptInvitationSchema } from '@/features/employee/schemas/employee.schema'
+import { employeeService } from '@/features/workspace/employee/services/employee.service'
+import { acceptInvitationSchema } from '@/features/workspace/employee/schemas/employee.schema'
 import { handleApiError } from '@/utils/handleApiError'
 
 const route = useRoute()

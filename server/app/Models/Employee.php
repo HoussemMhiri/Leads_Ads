@@ -8,6 +8,10 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
+/**
+ * Tenant relationship is implicit — Employee lives in the tenant's own database.
+ * Tenancy must be initialized before querying employees.
+ */
 class Employee extends Authenticatable
 {
     use HasApiTokens, HasFactory, HasRoles, Notifiable;

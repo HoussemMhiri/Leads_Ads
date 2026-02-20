@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Stancl\Tenancy\Contracts\TenantWithDatabase;
 use Stancl\Tenancy\Database\Concerns\HasDatabase;
 use Stancl\Tenancy\Database\Concerns\HasDomains;
@@ -16,13 +18,29 @@ class Tenant extends BaseTenant implements TenantWithDatabase
         return [
             'id',
             'tenancy_db_name',
+            'user_id',
             'created_at',
             'updated_at',
         ];
     }
 
-    public function users()
+    // ── Relationships ──────────────────────────────────────────────────────────
+
+    /**
+     * The user (owner) who owns this tenant.
+     * FK: tenants.user_id → users.id
+     */
+    public function owner(): BelongsTo
     {
-        return $this->hasMany(User::class);
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    /**
+     * All employees belonging to this tenant.
+     * Requires tenancy to be initialized before calling.
+     */
+    public function employees(): HasMany
+    {
+        return $this->hasMany(Employee::class);
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Employee;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Concerns\ResolvesTenant;
 use App\Http\Requests\Employee\AcceptInvitationRequest;
 use App\Http\Requests\Employee\InviteEmployeesRequest;
 use App\Models\Employee;
@@ -10,17 +11,41 @@ use App\Models\Tenant;
 use App\Services\Employee\InviteEmployeeService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Spatie\Permission\Models\Role;
 
 class EmployeeInvitationController extends Controller
 {
+    use ResolvesTenant;
+
+    /**
+     * Return all roles available for employees.
+     */
+    public function roles(Request $request): JsonResponse
+    {
+        $tenant = $this->getTenant($request);
+
+        if (! $tenant) {
+            return response()->json(['message' => 'No tenant associated with this account.'], 403);
+        }
+
+        tenancy()->initialize($tenant);
+
+        try {
+            $roles = Role::where('guard_name', 'employee')->get(['id', 'name']);
+
+            return response()->json($roles);
+        } finally {
+            tenancy()->end();
+        }
+    }
+
     /**
      * Send invitations to multiple employees.
      * Called by the tenant owner (authenticated User).
      */
     public function invite(InviteEmployeesRequest $request, InviteEmployeeService $service): JsonResponse
     {
-        $user = $request->user();
-        $tenant = $user->tenant;
+        $tenant = $this->getTenant($request);
 
         if (! $tenant) {
             return response()->json(['message' => 'No tenant associated with this account.'], 403);

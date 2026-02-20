@@ -1,29 +1,20 @@
 import api from '@/plugins/api'
-
-export interface InviteResponse {
-  message: string
-  invited: string[]
-  already_exists: string[]
-}
-
-export interface InvitationDetails {
-  email: string
-  tenant: string
-}
-
-export interface AcceptInvitationData {
-  name: string
-  password: string
-  password_confirmation: string
-}
-
-export interface AcceptInvitationResponse {
-  message: string
-}
+import type {
+  Role,
+  InviteResult,
+  InvitationDetails,
+  AcceptInvitationData,
+  AcceptInvitationResponse,
+} from '@/features/workspace/employee/types/employee.types'
 
 export const employeeService = {
-  async sendInvitations(emails: string[], role: string = 'member'): Promise<InviteResponse> {
-    const res = await api.post<InviteResponse>('/invite', { emails, role }, { prefix: 'employees' })
+  async getRoles(): Promise<Role[]> {
+    const res = await api.get<Role[]>('/roles', { prefix: 'employees' })
+    return res.data
+  },
+
+  async sendInvitations(emails: string[], role: string = 'member'): Promise<InviteResult> {
+    const res = await api.post<InviteResult>('/invite', { emails, role }, { prefix: 'employees' })
     return res.data
   },
 

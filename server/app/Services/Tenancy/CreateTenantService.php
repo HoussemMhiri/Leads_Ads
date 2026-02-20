@@ -24,11 +24,8 @@ class CreateTenantService
         Log::info('user  name', ['userName: ' => $user->name]);
 
         try {
-            // Create tenant (DB name handled inside the action)
-            $tenant = $this->createTenantAction->execute($subdomain, $user->name);
-
-            // Associate user with tenant
-            $user->update(['tenant_id' => $tenant->id]);
+            // Create tenant with owner set in one step
+            $tenant = $this->createTenantAction->execute($subdomain, $user->name, $user->id);
 
             Log::info('Tenant created', [
                 'tenant_id' => $tenant->id,

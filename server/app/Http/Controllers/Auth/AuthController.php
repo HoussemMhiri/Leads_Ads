@@ -127,10 +127,12 @@ class AuthController extends Controller
             'avatar'=>$user->avatar,
         ];
 
-        if ($user->tenant_id) {
+        $tenant = $user->tenant;
+
+        if ($tenant) {
             $data['tenant'] = [
-                'id' => $user->tenant_id,
-                'subdomain' => $user->tenant->domains->first()?->domain,
+                'id' => $tenant->id,
+                'subdomain' => $tenant->domains->first()?->domain,
             ];
         }
 
