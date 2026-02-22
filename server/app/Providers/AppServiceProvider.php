@@ -37,6 +37,14 @@ class AppServiceProvider extends ServiceProvider
         // Tell the middleware to read the workspace slug from X-Tenant header.
         // The actual resolution (slug → tenant) is handled by WorkspaceSlugTenantResolver.
         InitializeTenancyByRequestData::$header = 'X-Tenant';
+
+        // Return a clear JSON 404 when the workspace slug is not found,
+        // instead of letting the exception bubble up as a 500.
+        InitializeTenancyByRequestData::$onFail = function ($e, $request, $next) {
+            return response()->json([
+                'message' => 'Workspace not found. Please check the workspace name and try again.',
+            ], 404);
+        };
     }
 
 
