@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Notifications\QueuedVerifyEmail;
 use App\Notifications\ResetPasswordNotification;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -34,6 +35,11 @@ class User extends Authenticatable implements MustVerifyEmail
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function sendEmailVerificationNotification(): void
+    {
+        $this->notify(new QueuedVerifyEmail());
     }
 
     public function sendPasswordResetNotification($token): void

@@ -61,8 +61,6 @@ Route::prefix('auth')->group(function () {
 Route::prefix('employees')->group(function () {
 
     // ── Employee auth (login/logout/me) lives in tenant.php ───────────────────
-    // Accessed from the tenant subdomain: acme.localhost:8000/api/employees/*
-    // InitializeTenancyBySubdomain handles DB switching automatically.
 
     // ── Invitation management (owner-only) ────────────────────────────────────
 

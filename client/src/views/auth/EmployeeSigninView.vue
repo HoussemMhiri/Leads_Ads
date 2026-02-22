@@ -41,13 +41,20 @@
           {{ isLoading ? 'Signing in...' : 'Sign in' }}
         </Button>
       </form>
+
+      <p class="mt-6 text-center text-sm text-gray-500">
+        Are you a workspace owner?
+        <RouterLink :to="{ name: 'signin' }" class="text-blue-600 hover:underline">
+          Sign in here
+        </RouterLink>
+      </p>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute, useRouter, RouterLink } from 'vue-router'
 import { useForm } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
 import { z } from 'zod'
