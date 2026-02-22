@@ -1,9 +1,16 @@
 <template>
   <form @submit="onSubmit" class="space-y-4">
     <TextField
+      name="company_name"
+      label="Company Name"
+      placeholder="Acme Inc."
+      :disabled="isLoading"
+    />
+
+    <TextField
       name="name"
-      label="Name (Individual or Company)"
-      placeholder="Your name"
+      label="Your Name"
+      placeholder="John Doe"
       :disabled="isLoading"
     />
 
@@ -85,6 +92,7 @@ const { isLoading, error } = storeToRefs(authStore)
 const { handleSubmit, errors } = useForm({
   validationSchema: toTypedSchema(signupSchema),
   initialValues: {
+    company_name: '',
     name: '',
     email: '',
     password: '',

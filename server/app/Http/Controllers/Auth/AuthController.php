@@ -43,7 +43,7 @@ class AuthController extends Controller
             throw $e;
         }
 
-        $tenantResult = $this->createTenantService->execute($user);
+        $tenantResult = $this->createTenantService->execute($user, $data['company_name']);
 
         event(new Registered($user));
 
@@ -131,8 +131,9 @@ class AuthController extends Controller
 
         if ($tenant) {
             $data['tenant'] = [
-                'id' => $tenant->id,
-                'subdomain' => $tenant->domains->first()?->domain,
+                'id'           => $tenant->id,
+                'subdomain'    => $tenant->domains->first()?->domain,
+                'company_name' => $tenant->company_name,
             ];
         }
 

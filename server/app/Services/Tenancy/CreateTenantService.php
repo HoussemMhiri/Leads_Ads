@@ -17,15 +17,15 @@ class CreateTenantService
     /**
      * Provision a new tenant for a user.
      */
-    public function execute(User $user): array
+    public function execute(User $user, string $companyName): array
     {
-        $subdomain = $this->generateUniqueSubdomain($user->name);
+        $subdomain = $this->generateUniqueSubdomain($companyName);
 
-        Log::info('user  name', ['userName: ' => $user->name]);
+        Log::info('Creating tenant', ['companyName' => $companyName, 'userId' => $user->id]);
 
         try {
             // Create tenant with owner set in one step
-            $tenant = $this->createTenantAction->execute($subdomain, $user->name, $user->id);
+            $tenant = $this->createTenantAction->execute($subdomain, $companyName, $user->id);
 
             Log::info('Tenant created', [
                 'tenant_id' => $tenant->id,

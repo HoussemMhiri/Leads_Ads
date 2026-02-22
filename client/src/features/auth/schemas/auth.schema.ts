@@ -2,7 +2,8 @@ import * as z from "zod"
 import { emailSchema } from "@/utils/validators"
 
 export const signupSchema = z.object({
-  name: z.string().min(1, "Name is required"),
+  name: z.string().min(1, "Your name is required"),
+  company_name: z.string().min(1, "Company name is required"),
   email: emailSchema,
   password: z.string().min(8, "Password must be at least 8 characters"),
   password_confirmation: z.string(),

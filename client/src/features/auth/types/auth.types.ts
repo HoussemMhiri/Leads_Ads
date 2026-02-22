@@ -1,7 +1,7 @@
 export interface Tenant {
   id: number
-  name: string
   subdomain: string
+  company_name: string | null
 }
 
 export interface User {
@@ -23,6 +23,7 @@ export interface LoginCredentials {
 
 export interface RegisterData extends LoginCredentials {
   name: string
+  company_name: string
   password_confirmation: string
 }
 
