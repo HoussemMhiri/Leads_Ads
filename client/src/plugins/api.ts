@@ -1,8 +1,6 @@
 import router from '@/router'
 import axios, { type InternalAxiosRequestConfig } from 'axios'
 
-const BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL || 'http://localhost:8000'
-
 export const ENDPOINT_PREFIXES = {
   auth: '/api/auth',
   employees: '/api/employees',
@@ -18,8 +16,10 @@ declare module 'axios' {
   }
 }
 
+const WORKSPACE_KEY = 'employee_workspace_name'
+
 const api = axios.create({
-  baseURL: BASE_URL,
+  baseURL: import.meta.env.VITE_BACKEND_BASE_URL || 'http://localhost:8000',
   withCredentials: true,
   withXSRFToken: true,
   headers: {
@@ -32,6 +32,12 @@ const api = axios.create({
 // --------------------
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
+    // Attach workspace slug as X-Tenant header for tenant route initialization
+    const workspace = localStorage.getItem(WORKSPACE_KEY)
+    if (workspace) {
+      config.headers['X-Tenant'] = workspace
+    }
+
     if (config.prefix) {
       const prefix = ENDPOINT_PREFIXES[config.prefix]
 
@@ -61,21 +67,36 @@ api.interceptors.response.use(
     }
 
     if (error.response?.status === 401) {
-      const { useAuthStore } = await import('@/features/auth/store/auth.store')
-      const authStore = useAuthStore()
+      const workspace = localStorage.getItem(WORKSPACE_KEY)
 
-      authStore.authUser = null
-      authStore.clearErrors()
+      if (workspace) {
+        // Employee session expired
+        const { useEmployeeAuthStore } = await import(
+          '@/features/workspace/employee/store/employeeAuth.store'
+        )
+        const employeeAuthStore = useEmployeeAuthStore()
+        employeeAuthStore.authEmployee = null
 
-      // Redirect to login (avoid redirect loops)
-      const currentRoute = router.currentRoute.value.name
-      const authRoutes = ['signin', 'signup', 'forgotPassword', 'resetPassword']
+        const currentRoute = router.currentRoute.value.name
+        if (currentRoute !== 'employeeSignin') {
+          await router.push({ name: 'employeeSignin' })
+        }
+      } else {
+        // Owner session expired
+        const { useAuthStore } = await import('@/features/auth/store/auth.store')
+        const authStore = useAuthStore()
+        authStore.authUser = null
+        authStore.clearErrors()
 
-      if (!authRoutes.includes(currentRoute as string)) {
-        await router.push({
-          name: 'signin',
-          query: { redirect: router.currentRoute.value.fullPath },
-        })
+        const currentRoute = router.currentRoute.value.name
+        const authRoutes = ['signin', 'signup', 'forgotPassword', 'resetPassword']
+
+        if (!authRoutes.includes(currentRoute as string)) {
+          await router.push({
+            name: 'signin',
+            query: { redirect: router.currentRoute.value.fullPath },
+          })
+        }
       }
     }
 

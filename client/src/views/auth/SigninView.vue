@@ -8,10 +8,18 @@
 
     <!-- Form -->
     <SigninForm />
+
+    <p class="mt-6 text-center text-sm text-gray-500">
+      Are you a team member?
+      <RouterLink :to="{ name: 'employeeSignin' }" class="text-blue-600 hover:underline">
+        Sign in to your workspace
+      </RouterLink>
+    </p>
   </div>
 </template>
 
 <script setup lang="ts">
+import { RouterLink } from 'vue-router'
 import SigninForm from '@/features/auth/components/SigninForm.vue'
 </script>
 

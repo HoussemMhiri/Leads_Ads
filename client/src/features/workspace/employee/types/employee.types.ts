@@ -31,6 +31,7 @@ export interface InviteResult {
 export interface InvitationDetails {
   email: string
   tenant: string
+  workspace: string | null
 }
 
 export interface AcceptInvitationData {
@@ -41,4 +42,24 @@ export interface AcceptInvitationData {
 
 export interface AcceptInvitationResponse {
   message: string
+}
+
+// ── Employee Auth ──────────────────────────────────────────────────────────────
+
+export interface EmployeeLoginCredentials {
+  email: string
+  password: string
+}
+
+export interface AuthenticatedEmployee {
+  id: number
+  name: string
+  email: string
+  role: string
+}
+
+export interface EmployeeAuthResponse {
+  message: string
+  employee?: AuthenticatedEmployee
+  tenant?: { id: string; workspace: string | null }
 }

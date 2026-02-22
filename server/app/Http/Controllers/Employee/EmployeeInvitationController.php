@@ -81,8 +81,9 @@ class EmployeeInvitationController extends Controller
             }
 
             return response()->json([
-                'email' => $employee->email,
-                'tenant' => $tenantId,
+                'email'     => $employee->email,
+                'tenant'    => $tenantId,
+                'workspace' => $tenant->domains->first()?->domain,
             ]);
         } finally {
             tenancy()->end();

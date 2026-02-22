@@ -58,8 +58,14 @@ Route::prefix('auth')->group(function () {
     });
 });
 
-// Employee invitation routes
 Route::prefix('employees')->group(function () {
+
+    // ── Employee auth (login/logout/me) lives in tenant.php ───────────────────
+    // Accessed from the tenant subdomain: acme.localhost:8000/api/employees/*
+    // InitializeTenancyBySubdomain handles DB switching automatically.
+
+    // ── Invitation management (owner-only) ────────────────────────────────────
+
     Route::get('roles', [EmployeeInvitationController::class, 'roles'])
         ->middleware(['auth:sanctum'])
         ->name('employee.roles');
@@ -67,6 +73,8 @@ Route::prefix('employees')->group(function () {
     Route::post('invite', [EmployeeInvitationController::class, 'invite'])
         ->middleware(['auth:sanctum', 'throttle:10,1'])
         ->name('employee.invite');
+
+    // ── Invitation acceptance (public, signed URL) ────────────────────────────
 
     Route::get('invitation/{tenant}/{employee}/accept', [EmployeeInvitationController::class, 'show'])
         ->middleware('signed')

@@ -8,6 +8,7 @@ import ResetPasswordView from '@/views/auth/ResetPasswordView.vue'
 
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/features/auth/store/auth.store'
+import { useEmployeeAuthStore } from '@/features/workspace/employee/store/employeeAuth.store'
 import GoogleCallbackView from '@/views/auth/GoogleCallbackView.vue'
 
 const router = createRouter({
@@ -67,6 +68,13 @@ const router = createRouter({
       name: 'acceptInvitation',
       component: () => import('@/views/auth/AcceptInvitationView.vue'),
     },
+    // Employee login — lives outside /auth so the `requiresGuest` guard doesn't
+    // block owners who are already logged in as users.
+    {
+      path: '/employee/sign-in',
+      name: 'employeeSignin',
+      component: () => import('@/views/auth/EmployeeSigninView.vue'),
+    },
   ],
 })
 
@@ -74,26 +82,31 @@ const router = createRouter({
 let authInitialized = false
 
 // Navigation guard
-router.beforeEach(async (to, from, next) => {
+router.beforeEach(async (to, _from, next) => {
   const authStore = useAuthStore()
+  const employeeAuthStore = useEmployeeAuthStore()
 
-  // Wait for auth initialization on first navigation
+  // Restore both sessions on first navigation
   if (!authInitialized) {
-    await authStore.initializeAuth()
+    await Promise.all([authStore.initializeAuth(), employeeAuthStore.initializeAuth()])
     authInitialized = true
   }
 
   const requiresAuth = to.matched.some((record) => record.meta.requiresAuth)
   const requiresGuest = to.matched.some((record) => record.meta.requiresGuest)
 
-  if (requiresAuth && !authStore.isAuthenticated) {
-    // Not authenticated, redirect to login
-    next({
-      name: 'signin',
-      query: { redirect: to.fullPath },
-    })
+  const isAuthenticated = authStore.isAuthenticated || employeeAuthStore.isAuthenticated
+
+  if (requiresAuth && !isAuthenticated) {
+    // If a workspace is stored the user is an employee — send to employee login.
+    // Otherwise send to the owner login page.
+    if (localStorage.getItem('employee_workspace_name')) {
+      next({ name: 'employeeSignin' })
+    } else {
+      next({ name: 'signin', query: { redirect: to.fullPath } })
+    }
   } else if (requiresGuest && authStore.isAuthenticated) {
-    // Already logged in, redirect to dashboard
+    // Only redirect owners away from guest pages — employees use a different login page.
     next({ name: 'dashboard' })
   } else {
     next()

@@ -21,7 +21,9 @@ defineProps<{
 
       <Input
         :id="name"
-        v-bind="field"
+        :model-value="field.value"
+        @update:model-value="field.onChange"
+        @blur="field.onBlur"
         :type="type ?? 'text'"
         :placeholder="placeholder"
         :aria-invalid="!!errors.length"

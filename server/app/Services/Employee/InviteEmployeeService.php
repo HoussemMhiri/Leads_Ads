@@ -42,11 +42,13 @@ class InviteEmployeeService
 
                 $acceptUrl = $this->generateInvitationUrl($tenant, $employee);
 
-                $tenantName = Str::after($tenant->tenancy_db_name, 'tenant_');
+                $workspaceSlug = $tenant->domains->first()?->domain ?? $tenant->id;
+                $loginUrl = config('app.frontend_url') . '/employee/sign-in?workspace=' . $workspaceSlug;
 
                 Mail::to($email)->queue(new EmployeeInvitationMail(
                     acceptUrl: $acceptUrl,
-                    tenantName: $tenantName,
+                    tenantName: $workspaceSlug,
+                    loginUrl: $loginUrl,
                 ));
 
                 $results['invited'][] = $email;

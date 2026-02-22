@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:tenancyforlaravel.com)",
+      "WebFetch(domain:laravel.com)",
+      "WebFetch(domain:vuejs.org)"
+    ]
+  }
+}

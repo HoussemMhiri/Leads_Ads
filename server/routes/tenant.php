@@ -2,28 +2,40 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Employee\EmployeeAuthController;
 use Illuminate\Support\Facades\Route;
-use Stancl\Tenancy\Middleware\InitializeTenancyBySubdomain;
-use Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains;
+use Stancl\Tenancy\Middleware\InitializeTenancyByRequestData;
 
 /*
 |--------------------------------------------------------------------------
 | Tenant Routes
 |--------------------------------------------------------------------------
 |
-| Here you can register the tenant routes for your application.
-| These routes are loaded by the TenantRouteServiceProvider.
-|
-| Feel free to customize them however you want. Good luck!
+| These routes are accessible from any domain. The tenant is identified by
+| the X-Tenant header (workspace slug, e.g. "acme"), which the frontend
+| sends on every request after login. InitializeTenancyByRequestData looks
+| up the matching tenant in the domains table and switches the DB connection
+| automatically — no manual tenancy()->initialize() needed.
 |
 */
 
 Route::middleware([
-    'web',
-    InitializeTenancyBySubdomain::class,
-    PreventAccessFromCentralDomains::class,
-])->group(function () {
-    Route::get('/', function () {
-        return 'This is your multi-tenant application. The id of the current tenant is ' . tenant('id');
+    'api',
+    InitializeTenancyByRequestData::class,
+])->prefix('api/employees')->group(function () {
+
+    // ── Employee auth (public within tenant context) ───────────────────────────
+
+    Route::post('login', [EmployeeAuthController::class, 'login'])
+        ->middleware('throttle:authLimiter')
+        ->name('tenant.employee.login');
+
+    // ── Employee auth (protected) ──────────────────────────────────────────────
+
+    Route::middleware('auth:employee')->group(function () {
+        Route::post('logout', [EmployeeAuthController::class, 'logout'])
+            ->name('tenant.employee.logout');
+        Route::get('me', [EmployeeAuthController::class, 'me'])
+            ->name('tenant.employee.me');
     });
 });

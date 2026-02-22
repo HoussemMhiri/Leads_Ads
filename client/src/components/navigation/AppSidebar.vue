@@ -153,6 +153,7 @@ import {
   SidebarRail,
 } from '@/components/ui/sidebar'
 import { useAuthStore } from '@/features/auth/store/auth.store'
+import { useEmployeeAuthStore } from '@/features/workspace/employee/store/employeeAuth.store'
 import { storeToRefs } from 'pinia'
 import type { RouteLocationRaw } from 'vue-router'
 import WorkspaceSettingsModal from '@/features/workspace/components/WorkspaceSettingsModal.vue'
@@ -160,17 +161,29 @@ import WorkspaceSettingsModal from '@/features/workspace/components/WorkspaceSet
 // ── Modal state ───────────────────────────────────────────────────────────────
 const showWorkspaceSettings = ref(false)
 
-// ── Auth ──────────────────────────────────────────────────────────────────────
+// ── Auth — works for both owners and employees ────────────────────────────────
 const authStore = useAuthStore()
+const employeeAuthStore = useEmployeeAuthStore()
 const { authUser } = storeToRefs(authStore)
+const { authEmployee, workspaceName } = storeToRefs(employeeAuthStore)
 
-const userName = computed(() => authUser.value?.name ?? 'User')
-const userEmail = computed(() => authUser.value?.email ?? '')
-const userAvatar = computed(() => authUser.value?.avatar ?? null)
+const isEmployee = computed(() => authEmployee.value !== null)
+
+const userName = computed(() =>
+  isEmployee.value ? (authEmployee.value?.name ?? 'Employee') : (authUser.value?.name ?? 'User'),
+)
+const userEmail = computed(() =>
+  isEmployee.value ? (authEmployee.value?.email ?? '') : (authUser.value?.email ?? ''),
+)
+const userAvatar = computed(() => (isEmployee.value ? null : (authUser.value?.avatar ?? null)))
 const userInitial = computed(() => userName.value.charAt(0).toUpperCase())
 
-// ── Tenant (placeholder until tenant store exists) ────────────────────────────
-const tenantName = computed(() => authUser.value?.tenant?.subdomain ?? 'My Workspace')
+// ── Workspace header ──────────────────────────────────────────────────────────
+const tenantName = computed(() =>
+  isEmployee.value
+    ? (workspaceName.value ?? 'My Workspace')
+    : (authUser.value?.tenant?.subdomain ?? 'My Workspace'),
+)
 const tenantInitial = computed(() => tenantName.value.charAt(0).toUpperCase())
 
 // ── Navigation definition ─────────────────────────────────────────────────────

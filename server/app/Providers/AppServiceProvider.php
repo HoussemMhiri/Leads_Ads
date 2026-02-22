@@ -2,10 +2,13 @@
 
 namespace App\Providers;
 
+use App\Tenancy\Resolvers\WorkspaceSlugTenantResolver;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use Stancl\Tenancy\Middleware\InitializeTenancyByRequestData;
+use Stancl\Tenancy\Resolvers\RequestDataTenantResolver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -14,7 +17,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Swap the default resolver so the X-Tenant header is matched against
+        // the workspace slug (domain column) instead of the tenant UUID.
+        $this->app->bind(RequestDataTenantResolver::class, WorkspaceSlugTenantResolver::class);
     }
 
     /**
@@ -22,8 +27,16 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-       $this->configureAuthRateLimiting();
-       $this->configurePasswordResetRateLimiting();
+        $this->configureTenancyByHeader();
+        $this->configureAuthRateLimiting();
+        $this->configurePasswordResetRateLimiting();
+    }
+
+    protected function configureTenancyByHeader(): void
+    {
+        // Tell the middleware to read the workspace slug from X-Tenant header.
+        // The actual resolution (slug → tenant) is handled by WorkspaceSlugTenantResolver.
+        InitializeTenancyByRequestData::$header = 'X-Tenant';
     }
 
 

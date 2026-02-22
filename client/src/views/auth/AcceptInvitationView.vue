@@ -104,6 +104,7 @@ const expires = route.query.expires as string
 const signature = route.query.signature as string
 
 const inviteeEmail = ref('')
+const workspaceSubdomain = ref<string | null>(null)
 
 const { handleSubmit } = useForm({
   validationSchema: toTypedSchema(acceptInvitationSchema),
@@ -124,6 +125,7 @@ onMounted(async () => {
   try {
     const details = await employeeService.getInvitationDetails(tenant, employee, expires, signature)
     inviteeEmail.value = details.email
+    workspaceSubdomain.value = details.workspace
   } catch (error) {
     pageError.value = handleApiError(error)
   } finally {
@@ -145,7 +147,11 @@ const onSubmit = handleSubmit(async (values) => {
     successMessage.value = result.message
 
     setTimeout(() => {
-      router.push({ name: 'signin' })
+      // Redirect to employee sign-in with the workspace slug as a query param
+      // so the login form is pre-filled and the X-Tenant header can be sent.
+      if (workspaceSubdomain.value) {
+        router.push({ name: 'employeeSignin', query: { workspace: workspaceSubdomain.value } })
+      }
     }, 2000)
   } catch (error) {
     submitError.value = handleApiError(error)

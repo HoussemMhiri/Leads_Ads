@@ -5,9 +5,13 @@ import type {
   InvitationDetails,
   AcceptInvitationData,
   AcceptInvitationResponse,
+  EmployeeLoginCredentials,
+  EmployeeAuthResponse,
 } from '@/features/workspace/employee/types/employee.types'
 
 export const employeeService = {
+  // ── Invitation management ──────────────────────────────────────────────────
+
   async getRoles(): Promise<Role[]> {
     const res = await api.get<Role[]>('/roles', { prefix: 'employees' })
     return res.data
@@ -49,6 +53,26 @@ export const employeeService = {
         params: { expires, signature },
       },
     )
+    return res.data
+  },
+
+  // ── Employee auth ──────────────────────────────────────────────────────────
+
+  async loginEmployee(data: EmployeeLoginCredentials): Promise<EmployeeAuthResponse> {
+    const res = await api.post<EmployeeAuthResponse>('/login', data, { prefix: 'employees' })
+    return res.data
+  },
+
+  async logoutEmployee(): Promise<{ message: string }> {
+    const res = await api.post<{ message: string }>('/logout', {}, { prefix: 'employees' })
+    return res.data
+  },
+
+  async getCurrentEmployee(): Promise<EmployeeAuthResponse> {
+    const res = await api.get<EmployeeAuthResponse>('/me', {
+      prefix: 'employees',
+      skipAuthRedirect: true,
+    })
     return res.data
   },
 }

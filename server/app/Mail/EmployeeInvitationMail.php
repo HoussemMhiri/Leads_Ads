@@ -16,6 +16,7 @@ class EmployeeInvitationMail extends Mailable implements ShouldQueue
     public function __construct(
         public string $acceptUrl,
         public string $tenantName,
+        public string $loginUrl,
     ) {}
 
     public function envelope(): Envelope
