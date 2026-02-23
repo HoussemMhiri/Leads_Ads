@@ -98,13 +98,7 @@ router.beforeEach(async (to, _from, next) => {
   const isAuthenticated = authStore.isAuthenticated || employeeAuthStore.isAuthenticated
 
   if (requiresAuth && !isAuthenticated) {
-    // If a workspace is stored the user is an employee — send to employee login.
-    // Otherwise send to the owner login page.
-    if (localStorage.getItem('employee_workspace_name')) {
-      next({ name: 'employeeSignin' })
-    } else {
-      next({ name: 'signin', query: { redirect: to.fullPath } })
-    }
+    next({ name: 'signin', query: { redirect: to.fullPath } })
   } else if (requiresGuest && authStore.isAuthenticated) {
     // Only redirect owners away from guest pages — employees use a different login page.
     next({ name: 'dashboard' })

@@ -81,6 +81,13 @@ class AuthController extends Controller
             ], 403);
         }
 
+        // Store tenant_id in session so InitializeTenancyBySession works
+        // when the owner accesses tenant-scoped routes (roles, invite, etc.)
+        $tenant = $user->tenant;
+        if ($tenant) {
+            $request->session()->put('tenant_id', $tenant->id);
+        }
+
         // Regenerate session to prevent fixation attacks
         $request->session()->regenerate();
 

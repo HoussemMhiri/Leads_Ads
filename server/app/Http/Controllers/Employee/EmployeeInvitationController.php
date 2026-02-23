@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Employee;
 
 use App\Http\Controllers\Controller;
-use App\Http\Controllers\Concerns\ResolvesTenant;
 use App\Http\Requests\Employee\AcceptInvitationRequest;
 use App\Http\Requests\Employee\InviteEmployeesRequest;
 use App\Models\Employee;
+use App\Models\EmployeeWorkspace;
 use App\Models\Tenant;
 use App\Services\Employee\InviteEmployeeService;
 use Illuminate\Http\JsonResponse;
@@ -15,51 +15,32 @@ use Spatie\Permission\Models\Role;
 
 class EmployeeInvitationController extends Controller
 {
-    use ResolvesTenant;
-
-    /**
+/**
      * Return all roles available for employees.
+     * Tenancy is already initialized by InitializeTenancyBySession middleware.
      */
-    public function roles(Request $request): JsonResponse
+    public function roles(): JsonResponse
     {
-        $tenant = $this->getTenant($request);
+        $roles = Role::where('guard_name', 'employee')->get(['id', 'name']);
 
-        if (! $tenant) {
-            return response()->json(['message' => 'No tenant associated with this account.'], 403);
-        }
-
-        tenancy()->initialize($tenant);
-
-        try {
-            $roles = Role::where('guard_name', 'employee')->get(['id', 'name']);
-
-            return response()->json($roles);
-        } finally {
-            tenancy()->end();
-        }
+        return response()->json($roles);
     }
 
     /**
      * Send invitations to multiple employees.
-     * Called by the tenant owner (authenticated User).
+     * Tenancy is already initialized by InitializeTenancyBySession middleware.
      */
     public function invite(InviteEmployeesRequest $request, InviteEmployeeService $service): JsonResponse
     {
-        $tenant = $this->getTenant($request);
-
-        if (! $tenant) {
-            return response()->json(['message' => 'No tenant associated with this account.'], 403);
-        }
-
         $results = $service->execute(
-            tenant: $tenant,
+            tenant: tenancy()->tenant,
             emails: $request->validated('emails'),
             role: $request->validated('role') ?? 'member',
         );
 
         return response()->json([
-            'message' => 'Invitations processed.',
-            'invited' => $results['invited'],
+            'message'       => 'Invitations processed.',
+            'invited'       => $results['invited'],
             'already_exists' => $results['already_exists'],
         ]);
     }
@@ -111,6 +92,9 @@ class EmployeeInvitationController extends Controller
             ]);
 
             $employee->markInvitationAccepted();
+
+            EmployeeWorkspace::where('email', $employee->email)
+                ->update(['status' => 'active', 'expires_at' => null]);
 
             return response()->json([
                 'message' => 'Invitation accepted. You can now sign in.',

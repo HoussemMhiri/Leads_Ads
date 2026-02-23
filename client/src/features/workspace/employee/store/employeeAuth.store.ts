@@ -7,17 +7,11 @@ import type {
 } from '@/features/workspace/employee/types/employee.types'
 import { parseApiError } from '@/utils/handleApiError'
 
-const WORKSPACE_KEY = 'employee_workspace_name'
-
 export const useEmployeeAuthStore = defineStore('employeeAuthStore', () => {
   // ── State ──────────────────────────────────────────────────────────────────
 
   const authEmployee = ref<AuthenticatedEmployee | null>(null)
-
-  // Persist the workspace subdomain (e.g. "acme") so the sidebar always shows
-  // the correct workspace name even before the /me call resolves.
-  const workspaceName = ref<string | null>(localStorage.getItem(WORKSPACE_KEY))
-
+  const workspaceName = ref<string | null>(null)
   const isLoading = ref(false)
   const error = ref<string | null>(null)
 
@@ -45,31 +39,22 @@ export const useEmployeeAuthStore = defineStore('employeeAuthStore', () => {
     }
   }
 
-  const persistWorkspace = (workspace: string | null) => {
-    workspaceName.value = workspace
-    if (workspace) localStorage.setItem(WORKSPACE_KEY, workspace)
-    else localStorage.removeItem(WORKSPACE_KEY)
-  }
-
   // ── Actions ────────────────────────────────────────────────────────────────
 
   /**
    * Called on app boot to restore an existing employee session.
-   * Only runs when a workspace slug is stored in localStorage — without it
-   * the X-Tenant header cannot be sent and there is no session to restore.
+   * Tenant context is resolved server-side via the session cookie —
+   * no localStorage or header needed.
    */
   const initializeAuth = async () => {
-    if (!localStorage.getItem(WORKSPACE_KEY)) return
-
     isLoading.value = true
     try {
       const response = await employeeService.getCurrentEmployee()
       authEmployee.value = response.employee ?? null
-      if (response.tenant?.workspace) {
-        persistWorkspace(response.tenant.workspace)
-      }
+      workspaceName.value = response.tenant?.workspace ?? null
     } catch {
       authEmployee.value = null
+      workspaceName.value = null
     } finally {
       isLoading.value = false
     }
@@ -78,15 +63,10 @@ export const useEmployeeAuthStore = defineStore('employeeAuthStore', () => {
   const login = async (credentials: EmployeeLoginCredentials) => {
     return withLoading(async () => {
       const response = await employeeService.loginEmployee(credentials)
-
       if (response.employee) {
         authEmployee.value = response.employee
       }
-
-      if (response.tenant?.workspace) {
-        persistWorkspace(response.tenant.workspace)
-      }
-
+      workspaceName.value = response.tenant?.workspace ?? null
       return response
     })
   }
@@ -103,21 +83,17 @@ export const useEmployeeAuthStore = defineStore('employeeAuthStore', () => {
       }
     } finally {
       authEmployee.value = null
+      workspaceName.value = null
       isLoading.value = false
     }
   }
 
   return {
-    // State
     authEmployee,
     workspaceName,
     isLoading,
     error,
-
-    // Computed
     isAuthenticated,
-
-    // Actions
     login,
     logout,
     initializeAuth,

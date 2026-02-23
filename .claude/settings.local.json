@@ -3,7 +3,8 @@
     "allow": [
       "WebFetch(domain:tenancyforlaravel.com)",
       "WebFetch(domain:laravel.com)",
-      "WebFetch(domain:vuejs.org)"
+      "WebFetch(domain:vuejs.org)",
+      "Bash(php artisan migrate:*)"
     ]
   }
 }

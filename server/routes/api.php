@@ -64,13 +64,13 @@ Route::prefix('employees')->group(function () {
 
     // ── Invitation management (owner-only) ────────────────────────────────────
 
-    Route::get('roles', [EmployeeInvitationController::class, 'roles'])
+/*     Route::get('roles', [EmployeeInvitationController::class, 'roles'])
         ->middleware(['auth:sanctum'])
         ->name('employee.roles');
 
     Route::post('invite', [EmployeeInvitationController::class, 'invite'])
         ->middleware(['auth:sanctum', 'throttle:10,1'])
-        ->name('employee.invite');
+        ->name('employee.invite'); */
 
     // ── Invitation acceptance (public, signed URL) ────────────────────────────
 

@@ -16,8 +16,6 @@ declare module 'axios' {
   }
 }
 
-const WORKSPACE_KEY = 'employee_workspace_name'
-
 const api = axios.create({
   baseURL: import.meta.env.VITE_BACKEND_BASE_URL || 'http://localhost:8000',
   withCredentials: true,
@@ -32,12 +30,6 @@ const api = axios.create({
 // --------------------
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    // Attach workspace slug as X-Tenant header for tenant route initialization
-    const workspace = localStorage.getItem(WORKSPACE_KEY)
-    if (workspace) {
-      config.headers['X-Tenant'] = workspace
-    }
-
     if (config.prefix) {
       const prefix = ENDPOINT_PREFIXES[config.prefix]
 
@@ -67,9 +59,9 @@ api.interceptors.response.use(
     }
 
     if (error.response?.status === 401) {
-      const workspace = localStorage.getItem(WORKSPACE_KEY)
+      const isEmployeeRequest = error.config?.url?.includes('/api/employees/')
 
-      if (workspace) {
+      if (isEmployeeRequest) {
         // Employee session expired
         const { useEmployeeAuthStore } = await import(
           '@/features/workspace/employee/store/employeeAuth.store'

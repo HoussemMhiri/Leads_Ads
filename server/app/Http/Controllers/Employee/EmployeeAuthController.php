@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Employee;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Employee\EmployeeLoginRequest;
 use App\Models\Employee;
+use App\Models\EmployeeWorkspace;
+use App\Models\Tenant;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -15,41 +17,65 @@ class EmployeeAuthController extends Controller
     /**
      * Authenticate an employee within their tenant workspace.
      *
-     * Tenancy is already initialized by InitializeTenancyByRequestData before
-     * this controller runs — the DB is already pointing to the right tenant.
-     * The X-Tenant header identifies the workspace; no subdomain needed.
+     * Tenant is resolved by looking up the employee email in the central
+     * employee_workspaces table — no workspace field needed from the frontend.
+     * After login, tenant_id is stored in session so all subsequent requests
+     * use InitializeTenancyBySession middleware automatically.
      */
     public function login(EmployeeLoginRequest $request): JsonResponse
     {
-        $credentials = $request->validated();
+        $email = $request->validated('email');
 
-        if (! Auth::guard('employee')->attempt($credentials)) {
+        $mapping = EmployeeWorkspace::where('email', $email)->first();
+
+        if (! $mapping) {
             throw ValidationException::withMessages([
-                'email' => ['The provided credentials are incorrect.'],
+                'email' => ['No account found for this email.'],
             ]);
         }
 
-        /** @var Employee $employee */
-        $employee = Auth::guard('employee')->user();
+        $tenant = Tenant::find($mapping->tenant_id);
 
-        if ($employee->isPending()) {
-            Auth::guard('employee')->logout();
-
-            return response()->json([
-                'message' => 'Please accept your invitation before signing in.',
-            ], 403);
+        if (! $tenant) {
+            throw ValidationException::withMessages([
+                'email' => ['Workspace not found.'],
+            ]);
         }
 
-        $request->session()->regenerate();
+        tenancy()->initialize($tenant);
 
-        return response()->json([
-            'message'  => 'Login successful',
-            'employee' => $this->employeeResource($employee),
-            'tenant'   => [
-                'id'        => tenant('id'),
-                'workspace' => tenancy()->tenant->domains->first()?->domain,
-            ],
-        ]);
+        try {
+            if (! Auth::guard('employee')->attempt($request->only('email', 'password'))) {
+                throw ValidationException::withMessages([
+                    'email' => ['The provided credentials are incorrect.'],
+                ]);
+            }
+
+            /** @var Employee $employee */
+            $employee = Auth::guard('employee')->user();
+
+            if ($employee->isPending()) {
+                Auth::guard('employee')->logout();
+
+                return response()->json([
+                    'message' => 'Please accept your invitation before signing in.',
+                ], 403);
+            }
+
+            $request->session()->put('tenant_id', $tenant->id);
+            $request->session()->regenerate();
+
+            return response()->json([
+                'message'  => 'Login successful',
+                'employee' => $this->employeeResource($employee),
+                'tenant'   => [
+                    'id'        => $tenant->id,
+                    'workspace' => $tenant->domains->first()?->domain,
+                ],
+            ]);
+        } finally {
+            tenancy()->end();
+        }
     }
 
     /**

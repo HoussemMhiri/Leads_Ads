@@ -8,13 +8,6 @@
 
       <form @submit="onSubmit" class="space-y-4">
         <TextField
-          name="workspace"
-          label="Workspace"
-          placeholder="your-company"
-          :disabled="isLoading"
-        />
-
-        <TextField
           name="email"
           label="Email"
           type="email"
@@ -53,8 +46,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
-import { useRoute, useRouter, RouterLink } from 'vue-router'
+import { computed } from 'vue'
+import { useRouter, RouterLink } from 'vue-router'
 import { useForm } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
 import { z } from 'zod'
@@ -65,47 +58,24 @@ import Button from '@/components/ui/button/Button.vue'
 import AlertMessage from '@/components/shared/AlertMessage.vue'
 import { useEmployeeAuthStore } from '@/features/workspace/employee/store/employeeAuth.store'
 
-const route = useRoute()
 const router = useRouter()
 const employeeAuthStore = useEmployeeAuthStore()
 
 const { isLoading, error } = storeToRefs(employeeAuthStore)
 
-// Pre-fill workspace from ?workspace= query param (set by AcceptInvitationView)
-// or from localStorage (returning employee).
-const savedWorkspace =
-  (route.query.workspace as string) || localStorage.getItem('employee_workspace_name') || ''
-
 const loginSchema = z.object({
-  workspace: z.string().min(1, 'Workspace is required'),
   email: z.string().email('Please enter a valid email'),
   password: z.string().min(1, 'Password is required'),
 })
 
-const { handleSubmit, errors, setFieldValue } = useForm({
+const { handleSubmit, errors } = useForm({
   validationSchema: toTypedSchema(loginSchema),
-  initialValues: { workspace: savedWorkspace, email: '', password: '' },
 })
 
 const hasErrors = computed(() => Object.keys(errors.value).length > 0)
 
 const onSubmit = handleSubmit(async (values) => {
-  // Persist workspace so the X-Tenant header is sent with the login request
-  localStorage.setItem('employee_workspace_name', values.workspace)
-
-  await employeeAuthStore.login({
-    email: values.email,
-    password: values.password,
-  })
-
+  await employeeAuthStore.login(values)
   router.push({ name: 'dashboard' })
-})
-
-onMounted(() => {
-  employeeAuthStore.clearError()
-  const ws = (route.query.workspace as string) || localStorage.getItem('employee_workspace_name') || ''
-  if (ws) {
-    setFieldValue('workspace', ws)
-  }
 })
 </script>
