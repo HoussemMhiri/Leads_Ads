@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Enums\EmployeeWorkspaceStatus;
+use App\Enums\InvitedByType;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -16,8 +18,10 @@ class EmployeeWorkspace extends Model
     protected $fillable = ['email', 'tenant_id', 'tenant_name', 'invited_by', 'invited_by_type', 'status', 'invited_at', 'expires_at'];
 
     protected $casts = [
-        'invited_at' => 'datetime',
-        'expires_at' => 'datetime',
+        'invited_at'      => 'datetime',
+        'expires_at'      => 'datetime',
+        'status'          => EmployeeWorkspaceStatus::class,
+        'invited_by_type' => InvitedByType::class,
     ];
 
     public function isExpired(): bool

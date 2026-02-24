@@ -2,6 +2,8 @@
 
 namespace App\Services\Employee;
 
+use App\Enums\EmployeeWorkspaceStatus;
+use App\Enums\InvitedByType;
 use App\Mail\EmployeeInvitationMail;
 use App\Models\Employee;
 use App\Models\EmployeeWorkspace;
@@ -31,23 +33,23 @@ class InviteEmployeeService
     {
         $results = ['invited' => [], 'already_exists' => []];
 
-        $invitedByUser     = Auth::user();
         $invitedByEmployee = Auth::guard('employee')->user();
-        $invitedBy       ??= $invitedByUser?->email ?? $invitedByEmployee?->email;
-        $invitedByType     = $invitedByUser ? 'owner' : ($invitedByEmployee ? 'employee' : null);
+        $invitedByUser     = Auth::guard('web')->user();
+        $invitedBy       ??= $invitedByEmployee?->email ?? $invitedByUser?->email;
+        $invitedByType     = $invitedByEmployee ? InvitedByType::Employee : ($invitedByUser ? InvitedByType::Owner : null);
         $tenantName = $tenant->company_name ?? $tenant->domains->first()?->domain ?? $tenant->id;
 
         foreach ($emails as $email) {
             $existingMapping = EmployeeWorkspace::where('email', $email)->first();
 
             // Block if already active in central mapping
-            if ($existingMapping && $existingMapping->status === 'active') {
+            if ($existingMapping && $existingMapping->status === EmployeeWorkspaceStatus::Active) {
                 $results['already_exists'][] = $email;
                 continue;
             }
 
             // Block if pending and not yet expired
-            if ($existingMapping && $existingMapping->status === 'pending' && ! $existingMapping->isExpired()) {
+            if ($existingMapping && $existingMapping->status === EmployeeWorkspaceStatus::Pending && ! $existingMapping->isExpired()) {
                 $results['already_exists'][] = $email;
                 continue;
             }

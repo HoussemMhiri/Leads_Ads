@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Employee;
 
+use App\Enums\EmployeeWorkspaceStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Employee\AcceptInvitationRequest;
 use App\Http\Requests\Employee\InviteEmployeesRequest;
@@ -94,7 +95,7 @@ class EmployeeInvitationController extends Controller
             $employee->markInvitationAccepted();
 
             EmployeeWorkspace::where('email', $employee->email)
-                ->update(['status' => 'active', 'expires_at' => null]);
+                ->update(['status' => EmployeeWorkspaceStatus::Active, 'expires_at' => null]);
 
             return response()->json([
                 'message' => 'Invitation accepted. You can now sign in.',

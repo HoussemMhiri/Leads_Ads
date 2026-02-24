@@ -66,7 +66,7 @@ class SocialAuthController extends Controller
             }
 
             if ($isNewUser) {
-                $tenantResult = $this->createTenantService->execute($user);
+                $tenantResult = $this->createTenantService->execute($user, $googleUser->getName());
             }
 
             $code = Str::random(40);
