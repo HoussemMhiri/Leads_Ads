@@ -86,9 +86,16 @@ router.beforeEach(async (to, _from, next) => {
   const authStore = useAuthStore()
   const employeeAuthStore = useEmployeeAuthStore()
 
-  // Restore both sessions on first navigation
+  // Restore session on first navigation — single request, never 401
   if (!authInitialized) {
-    await Promise.all([authStore.initializeAuth(), employeeAuthStore.initializeAuth()])
+    const { sessionService } = await import('@/features/auth/services/session.service')
+    const me = await sessionService.getMe()
+    if (me.type === 'owner') {
+      authStore.authUser = me.user
+    } else if (me.type === 'employee') {
+      employeeAuthStore.authEmployee = me.employee
+      employeeAuthStore.workspaceName = me.tenant?.workspace ?? null
+    }
     authInitialized = true
   }
 

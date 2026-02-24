@@ -5,7 +5,11 @@ use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\Auth\SocialAuthController;
 use App\Http\Controllers\Employee\EmployeeInvitationController;
+use App\Http\Controllers\SessionController;
 use Illuminate\Support\Facades\Route;
+
+// Single session-restore endpoint — always 200, never 401
+Route::get('me', SessionController::class);
 
 Route::prefix('auth')->group(function () {
 
@@ -62,15 +66,6 @@ Route::prefix('employees')->group(function () {
 
     // ── Employee auth (login/logout/me) lives in tenant.php ───────────────────
 
-    // ── Invitation management (owner-only) ────────────────────────────────────
-
-/*     Route::get('roles', [EmployeeInvitationController::class, 'roles'])
-        ->middleware(['auth:sanctum'])
-        ->name('employee.roles');
-
-    Route::post('invite', [EmployeeInvitationController::class, 'invite'])
-        ->middleware(['auth:sanctum', 'throttle:10,1'])
-        ->name('employee.invite'); */
 
     // ── Invitation acceptance (public, signed URL) ────────────────────────────
 
