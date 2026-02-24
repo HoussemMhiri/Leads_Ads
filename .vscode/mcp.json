@@ -1,0 +1,11 @@
+{
+    "servers": {
+        "laravel-boost": {
+            "command": "php",
+            "args": [
+                "G:/New folder/Leads_Ads/server/artisan",
+                "boost:mcp"
+            ]
+        }
+    }
+}

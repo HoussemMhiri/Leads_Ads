@@ -1,0 +1,4 @@
+{
+    "Laravel.basePath": "server",
+    "Laravel.pint.runOnSave": true
+}
