@@ -1,0 +1,285 @@
+## Code Quality — Always
+
+- **Clean**: No dead code, no commented-out blocks, no unused imports or variables. Every line earns its place.
+- **Readable**: Code should read like prose. Prefer explicit names over brevity. Avoid implicit behavior and magic values.
+- **Maintainable**: One responsibility per function/component. Avoid side effects in components; centralize them in stores/services. Keep components small — if a component grows beyond ~150 lines, split it.
+- **Extensible**: Don't hardcode what could be data-driven. Avoid tight coupling between features. New requirements should slot in, not require rewrites.
+
+> When in doubt between clever and clear, always choose clear.
+
+## Before Every Task
+
+Before making any change, always explain:
+1. **The problem** — what is wrong or what is being added and why.
+2. **The constraints** — what must be preserved or avoided.
+3. **The solution** — the chosen approach and why (mention alternatives if relevant).
+
+Only proceed with changes after this explanation.
+
+---
+
+## Foundational Context
+
+This is the Vue 3 + TypeScript SPA for Leads_Ads. You are an expert with this stack.
+
+- **vue** - v3.5
+- **vue-router** - v4
+- **pinia** - v3
+- **vite** - v6
+- **tailwindcss** - v4 (via `@tailwindcss/vite`)
+- **reka-ui** - v2 (headless UI primitives)
+- **vee-validate** + **@vee-validate/zod** - form validation
+- **zod** - schema validation
+- **axios** - HTTP client
+- **lucide-vue-next** - icons
+- **vitest** - unit testing
+
+## Conventions
+
+- Follow existing code conventions. Always check sibling files before creating something new.
+- Use descriptive names: `isSubmitting`, not `loading`; `handleSendInvitations`, not `send`.
+- Check for existing components (especially in `src/components/ui/`) before writing new ones.
+
+## Application Structure
+
+```
+src/
+├── features/          # Feature modules (self-contained)
+│   ├── auth/
+│   │   ├── components/
+│   │   ├── schemas/
+│   │   ├── services/
+│   │   ├── store/
+│   │   └── types/
+│   └── workspace/
+│       ├── components/
+│       └── employee/
+│           ├── components/
+│           ├── schemas/
+│           ├── services/
+│           ├── store/
+│           └── types/
+├── components/
+│   ├── ui/            # Headless reka-ui primitives (never modify arbitrarily)
+│   ├── forms/         # Shared form field wrappers (TextField, etc.)
+│   ├── navigation/
+│   └── shared/        # Shared utility components (AlertMessage, etc.)
+├── layouts/           # MainLayout, AuthLayout
+├── views/             # Route-level views (thin wrappers, delegate to features)
+├── stores/            # Global Pinia stores (session.store.ts, etc.)
+├── router/
+├── plugins/           # api.ts (axios instance)
+├── utils/             # handleApiError.ts, validators.ts
+└── lib/               # utils.ts (cn helper)
+```
+
+## Architecture & Practices
+
+- Use a **composable** (`use*.ts`) for reusable stateless/reactive logic — UI state, derived values, event handling.
+- Use a **store** for shared state that persists across components or needs to survive navigation.
+- Use a **service** for all API calls — never call `api` directly from a component or store method.
+- Keep **views thin** — no business logic, no direct API calls. Delegate to feature components.
+- Favor composables over prop-drilling more than 2 levels deep.
+- Do not introduce abstractions without a real, present need.
+- When unsure about a Vue 3 pattern, check the official Vue or Pinia docs before proceeding.
+
+---
+
+## Packages & Tooling
+
+- **Always ask for confirmation before adding a new npm package**, and explain:
+  - what problem it solves
+  - why it's better than a custom solution
+  - trade-offs (if any)
+
+---
+
+## Components
+
+- Always use `<script setup lang="ts">`.
+- Define props with `defineProps<{ ... }>()`, emits with `defineEmits<{ ... }>()`.
+- Use `v-model` update pattern: `defineEmits<{ 'update:modelValue': [value: string] }>()`.
+- Import reactive Vue APIs explicitly: `import { ref, computed, watch } from 'vue'`.
+- Use `storeToRefs()` to destructure reactive store state.
+- Use `lucide-vue-next` for all icons.
+- Use `cn()` from `@/lib/utils` for conditional Tailwind classes.
+
+```vue
+<script setup lang="ts">
+import { ref, computed } from 'vue'
+import { storeToRefs } from 'pinia'
+import { cn } from '@/lib/utils'
+
+const props = defineProps<{
+  label: string
+  disabled?: boolean
+}>()
+
+const emit = defineEmits<{
+  submit: [value: string]
+}>()
+</script>
+```
+
+## UI Components
+
+- Use reka-ui primitives from `src/components/ui/` as the base for all UI.
+- Complex UI components (Dialog, Select, Sidebar) have subcomponent exports via `index.ts` barrel files.
+- Use CVA (`class-variance-authority`) for variant-based styling. See `Button` as the reference.
+- Use the `cn()` utility for all dynamic class composition:
+
+```typescript
+import { cn } from '@/lib/utils'
+// cn('base-class', condition && 'conditional-class', props.class)
+```
+
+## Stores (Pinia)
+
+- Always use the **setup store** (composition API) pattern — never options stores.
+- Store naming: `useFeatureNameStore` (e.g., `useAuthStore`, `useEmployeeStore`).
+- Store key (first argument): camelCase string matching the name (e.g., `'authStore'`).
+- State is `ref()`, computed properties are `computed()`.
+- Use a `withLoading()` helper inside every store that has async operations:
+
+```typescript
+export const useExampleStore = defineStore('exampleStore', () => {
+  const data = ref<Item[]>([])
+  const isLoading = ref(false)
+  const error = ref<string | null>(null)
+
+  const clearError = () => { error.value = null }
+
+  const withLoading = async <T>(asyncFn: () => Promise<T>): Promise<T> => {
+    isLoading.value = true
+    clearError()
+    try {
+      return await asyncFn()
+    } catch (err) {
+      const parsed = parseApiError(err)
+      error.value = parsed.message
+      throw err
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  const fetchItems = async () => {
+    return withLoading(async () => {
+      data.value = await exampleService.getAll()
+    })
+  }
+
+  return { data, isLoading, error, clearError, fetchItems }
+})
+```
+
+- Always explicitly return the public interface from the store.
+- Cache guards: check if data already exists before fetching (e.g., `if (items.value.length > 0) return`).
+
+## API Calls (Services)
+
+- All API calls go through the configured axios instance: `import api from '@/plugins/api'`.
+- Services are plain objects exported as `const featureService = { ... }`.
+- Use typed generics: `api.get<ResponseType>('/path')`.
+- Use the `prefix` config option to namespace endpoints — see `ENDPOINT_PREFIXES` in `plugins/api.ts`.
+- Always return `res.data` directly.
+- Services throw errors — stores catch them via `withLoading()`.
+
+```typescript
+import api from '@/plugins/api'
+import type { Item } from '../types/example.types'
+
+export const exampleService = {
+  async getAll(): Promise<Item[]> {
+    const res = await api.get<Item[]>('/items', { prefix: 'employees' })
+    return res.data
+  },
+
+  async create(data: CreateItemData): Promise<Item> {
+    const res = await api.post<Item>('/items', data, { prefix: 'employees' })
+    return res.data
+  },
+}
+```
+
+- Use `skipAuthRedirect: true` on calls that run during auth initialization (e.g., `getCurrentUser`, `getCurrentEmployee`).
+
+## Forms (vee-validate + Zod)
+
+- Define schemas with Zod in `features/{feature}/schemas/{feature}.schema.ts`.
+- Export inferred TypeScript types alongside each schema: `export type SignupInput = z.infer<typeof signupSchema>`.
+- Use `toTypedSchema()` from `@vee-validate/zod` to bridge Zod → vee-validate.
+- Use `useForm({ validationSchema, initialValues })` in components, not field-level validation.
+- Use `handleSubmit()` to wrap submission handlers.
+- Use shared `emailSchema` from `@/utils/validators` — do not redefine email validation.
+
+```typescript
+import { useForm } from 'vee-validate'
+import { toTypedSchema } from '@vee-validate/zod'
+import { mySchema } from '../schemas/my.schema'
+
+const { handleSubmit, errors } = useForm({
+  validationSchema: toTypedSchema(mySchema),
+  initialValues: { field: '' },
+})
+
+const onSubmit = handleSubmit(async (values) => {
+  await store.doAction(values)
+})
+```
+
+- Use the `TextField` component from `@/components/forms/TextField.vue` for text/password inputs — it handles vee-validate field binding, label, error display, and password toggle.
+- Use `AlertMessage` from `@/components/shared/AlertMessage.vue` to display store-level `error` and `successMessage`.
+
+## Error Handling
+
+- Use `parseApiError(error)` from `@/utils/handleApiError` to parse Axios errors into `ParsedError`.
+- Use `handleApiError(error)` when you only need the error message string.
+- Use `isAuthError()`, `isValidationError()` helpers for conditional error logic.
+- Never swallow errors silently — always set `error.value` in the store or surface to the user.
+
+## Types
+
+- Define types in `features/{feature}/types/{feature}.types.ts`.
+- Use `interface` for API response shapes and data models.
+- Use discriminated unions for multi-state responses (see `MeResponse` in `session.service.ts`).
+- Import types with `import type { ... }`.
+
+## Router
+
+- Route **names** use camelCase: `'dashboard'`, `'forgotPassword'`, `'employeeSignin'`.
+- Route **paths** use kebab-case: `/sign-in`, `/forgot-password`, `/employee/sign-in`.
+- Use `meta: { requiresAuth: true }` or `meta: { requiresGuest: true }` for guards.
+- Lazy-load non-critical routes: `component: () => import('@/views/...')`.
+- Always navigate using named routes: `router.push({ name: 'dashboard' })`.
+
+## Layouts
+
+- `MainLayout` — authenticated app shell with sidebar (`SidebarProvider` + `AppSidebar`).
+- `AuthLayout` — split-screen layout for all auth pages.
+- Views should not contain layout logic — delegate to the appropriate layout via the router.
+
+## Views
+
+- Views are thin wrappers: minimal markup, delegate to feature components.
+- Do not put business logic, API calls, or store interactions directly in views — use feature components.
+
+## Path Aliases
+
+- Always use `@/` for absolute imports from `src/`: `import { cn } from '@/lib/utils'`.
+- Never use deep relative paths (`../../..`).
+
+## Testing
+
+- Tests live in `src/__tests__/` or colocated `*.spec.ts` files.
+- Use Vitest for unit tests.
+- Run tests: `npm run test:unit`.
+
+## Development Commands
+
+- `npm run dev` — start Vite dev server
+- `npm run build` — production build (also runs type-check)
+- `npm run type-check` — TypeScript check only
+- `npm run lint` — ESLint with auto-fix
+- `npm run format` — Prettier formatting
+- `npm run test:unit` — run Vitest tests

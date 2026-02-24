@@ -4,7 +4,13 @@
       "WebFetch(domain:tenancyforlaravel.com)",
       "WebFetch(domain:laravel.com)",
       "WebFetch(domain:vuejs.org)",
-      "Bash(php artisan migrate:*)"
+      "Bash(php artisan migrate:*)",
+      "Bash(php artisan test*)",
+      "Bash(php artisan make:*)",
+      "Bash(php artisan*)",
+      "Bash(vendor/bin/pint*)",
+      "Bash(npm run*)",
+      "Bash(composer*)"
     ]
   }
 }

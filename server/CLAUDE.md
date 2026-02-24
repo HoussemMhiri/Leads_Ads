@@ -1,3 +1,55 @@
+## Code Quality — Always
+
+- **Clean**: No dead code, no commented-out blocks, no unused imports or variables. Every line earns its place.
+- **Readable**: Code should read like prose. Prefer explicit names over brevity. Avoid implicit behavior, magic values, and hidden side effects.
+- **Maintainable**: One responsibility per class/method. Keep classes focused — if a class grows too large, split it.
+  - Controllers **route and coordinate**
+  - Actions **orchestrate a single use case**
+  - Services **contain domain/business logic**
+  - Models **represent data and relationships**
+- **Extensible**: Don't hardcode what could be data-driven. Avoid tight coupling between modules. New requirements should slot in, not require rewrites.
+
+> When in doubt between clever and clear, always choose clear.
+
+---
+
+## Architecture & Practices
+
+- Prefer **Actions** for application use-cases (one action = one intent).
+- Use **Services** for reusable domain logic.
+- Keep **Controllers thin** — no business logic.
+- Models should stay focused on persistence and relationships.
+- Favor **composition over inheritance**.
+- Introduce **design patterns** (Strategy, Factory, DTOs, Pipeline, etc.) **only when they clearly improve clarity or extensibility**.
+- Do not introduce abstractions without a real, present need.
+- When in doubt about an approach, always check the latest Laravel documentation (`search-docs` tool) to ensure you are using the most current and idiomatic methods.
+
+---
+
+## Packages & Tooling
+
+- You may suggest **well-maintained Laravel packages** if they clearly:
+  - reduce boilerplate
+  - improve correctness
+  - simplify complex logic
+- **Always ask for confirmation before adding a new package**, and explain:
+  - what problem it solves
+  - why it's better than a custom solution
+  - trade-offs (if any)
+
+---
+
+## Before Every Task
+
+Before making any change, always explain:
+1. **The problem** — what is wrong or what is being added and why.
+2. **The constraints** — what must be preserved or avoided.
+3. **The solution** — the chosen approach and why (mention alternatives if relevant).
+
+Only proceed with changes after this explanation.
+
+---
+
 <laravel-boost-guidelines>
 === foundation rules ===
 

@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd 'g:/New folder/Leads_Ads/server' && vendor/bin/pint --dirty 2>/dev/null; true"
+          }
+        ]
+      }
+    ]
+  }
+}

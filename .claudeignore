@@ -1,0 +1,10 @@
+server/vendor/
+server/node_modules/
+server/storage/logs/
+server/storage/framework/cache/
+server/storage/framework/sessions/
+server/storage/framework/views/
+server/bootstrap/cache/
+server/public/build/
+client/node_modules/
+client/dist/
