@@ -9,6 +9,7 @@ import type {
   ResetPasswordData,
 } from '@/features/auth/types/auth.types'
 import { parseApiError, type ParsedError } from '@/utils/handleApiError'
+import { useWorkspaceStore } from '@/features/workspace/store/workspace.store'
 
 export const useAuthStore = defineStore('authStore', () => {
   const authUser = ref<User | null>(null)
@@ -30,6 +31,13 @@ export const useAuthStore = defineStore('authStore', () => {
   const isAuthenticated = computed(() => authUser.value !== null)
   const hasError = computed(() => error.value !== null)
   const hasSuccessMessage = computed(() => successMessage.value !== null)
+
+  const syncWorkspace = (user: User) => {
+    useWorkspaceStore().setWorkspace({
+      name: user.tenant?.company_name ?? null,
+      logo_url: user.tenant?.logo_url ?? null,
+    })
+  }
 
   // Clear all errors
   const clearErrors = () => {
@@ -114,6 +122,7 @@ export const useAuthStore = defineStore('authStore', () => {
       const response = await authService.loginUser(credentials)
       if (response.user) {
         authUser.value = response.user
+        syncWorkspace(response.user)
       }
       return response
     })
@@ -162,6 +171,7 @@ export const useAuthStore = defineStore('authStore', () => {
       const response = await authService.exchangeGoogleCode(code)
       if (response.user) {
         authUser.value = response.user
+        syncWorkspace(response.user)
       }
       return response
     })
