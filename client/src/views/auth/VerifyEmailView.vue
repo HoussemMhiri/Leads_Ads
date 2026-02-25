@@ -92,6 +92,9 @@ const handleResend = async () => {
 }
 
 const startCooldown = () => {
+  if (cooldownInterval) {
+    clearInterval(cooldownInterval)
+  }
   cooldown.value = 60
   cooldownInterval = window.setInterval(() => {
     cooldown.value--

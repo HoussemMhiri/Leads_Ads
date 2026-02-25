@@ -117,7 +117,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, computed, ref } from 'vue'
+import { reactive, computed, ref, type Component } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import { CollapsibleRoot, CollapsibleTrigger, CollapsibleContent } from 'reka-ui'
 import {
@@ -194,7 +194,7 @@ interface NavChild {
 }
 interface NavItem {
   title: string
-  icon: object
+  icon: Component
   to?: RouteLocationRaw
   children?: NavChild[]
   action?: () => void

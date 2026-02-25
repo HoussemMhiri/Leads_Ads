@@ -9,7 +9,7 @@ export type MeResponse =
 
 export const sessionService = {
   async getMe(): Promise<MeResponse> {
-    const res = await api.get<MeResponse>('/api/me')
+    const res = await api.get<MeResponse>('/api/me', { skipAuthRedirect: true })
     return res.data
   },
 }

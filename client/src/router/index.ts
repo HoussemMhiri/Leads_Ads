@@ -79,9 +79,6 @@ const router = createRouter({
   ],
 })
 
-// Track if auth has been initialized
-let authInitialized = false
-
 // Navigation guard
 router.beforeEach(async (to, _from, next) => {
   const authStore = useAuthStore()
@@ -89,7 +86,7 @@ router.beforeEach(async (to, _from, next) => {
   const workspaceStore = useWorkspaceStore()
 
   // Restore session on first navigation — single request, never 401
-  if (!authInitialized) {
+  if (!authStore.authInitialized) {
     const { sessionService } = await import('@/features/auth/services/session.service')
     const me = await sessionService.getMe()
     if (me.type === 'owner') {
@@ -106,7 +103,7 @@ router.beforeEach(async (to, _from, next) => {
         logo_url: me.tenant?.logo_url ?? null,
       })
     }
-    authInitialized = true
+    authStore.authInitialized = true
   }
 
   const requiresAuth = to.matched.some((record) => record.meta.requiresAuth)

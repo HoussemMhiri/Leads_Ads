@@ -83,13 +83,14 @@ import { signupSchema } from '../schemas/auth.schema'
 import { useAuthStore } from '../store/auth.store'
 import { storeToRefs } from 'pinia'
 import AlertMessage from '@/components/shared/AlertMessage.vue'
+import { parseApiError } from '@/utils/handleApiError'
 
 const router = useRouter()
 const authStore = useAuthStore()
 
 const { isLoading, error } = storeToRefs(authStore)
 
-const { handleSubmit, errors } = useForm({
+const { handleSubmit, errors, setErrors } = useForm({
   validationSchema: toTypedSchema(signupSchema),
   initialValues: {
     company_name: '',
@@ -105,8 +106,11 @@ const onSubmit = handleSubmit(async (values) => {
     await authStore.register(values)
     // Redirect to verify email page instead of dashboard
     router.push({ name: 'verifyEmail' })
-  } catch (error) {
-    console.error('Registration failed:', error)
+  } catch (err) {
+    const parsed = parseApiError(err)
+    if (Object.keys(parsed.fieldErrors).length) {
+      setErrors(parsed.fieldErrors)
+    }
   }
 })
 

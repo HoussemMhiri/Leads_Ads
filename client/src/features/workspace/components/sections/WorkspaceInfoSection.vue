@@ -73,7 +73,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onBeforeUnmount } from 'vue'
 import { useWorkspaceStore } from '@/features/workspace/store/workspace.store'
 import AlertMessage from '@/components/shared/AlertMessage.vue'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
@@ -124,14 +124,22 @@ function triggerFileInput() {
   fileInput.value?.click()
 }
 
+function revokeBlobPreview() {
+  if (logoPreview.value?.startsWith('blob:')) {
+    URL.revokeObjectURL(logoPreview.value)
+  }
+}
+
 function onFileChange(event: Event) {
   const file = (event.target as HTMLInputElement).files?.[0]
   if (!file) return
+  revokeBlobPreview()
   logoFile.value = file
   logoPreview.value = URL.createObjectURL(file)
 }
 
 function clearLogo() {
+  revokeBlobPreview()
   logoFile.value = null
   logoPreview.value = workspaceStore.logo
   if (fileInput.value) fileInput.value.value = ''
@@ -155,10 +163,15 @@ async function submit() {
     const response = await workspaceStore.update(payload)
     successMessage.value = response.message
     originalName.value = workspaceStore.name ?? ''
+    revokeBlobPreview()
     logoFile.value = null
     logoPreview.value = workspaceStore.logo
   } catch {
     errorMessage.value = workspaceStore.error ?? 'Something went wrong.'
   }
 }
+
+onBeforeUnmount(() => {
+  revokeBlobPreview()
+})
 </script>

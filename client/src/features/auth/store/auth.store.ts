@@ -13,6 +13,7 @@ import { useWorkspaceStore } from '@/features/workspace/store/workspace.store'
 
 export const useAuthStore = defineStore('authStore', () => {
   const authUser = ref<User | null>(null)
+  const authInitialized = ref(false)
   const isLoading = ref(false)
   const error = ref<string | null>(null)
   const validationErrors = ref<Record<string, string[]>>({})
@@ -63,8 +64,8 @@ export const useAuthStore = defineStore('authStore', () => {
     error.value = null
     validationErrors.value = {}
   }
-  // Wrap async operations with loading state and error handling
 
+  // Wrap async operations with loading state and error handling
   const withLoading = async <T>(asyncFn: () => Promise<T>): Promise<T> => {
     isLoading.value = true
     clearErrors()
@@ -80,30 +81,6 @@ export const useAuthStore = defineStore('authStore', () => {
     }
   }
 
-  //  Verify current session is valid
-  const verifySession = async () => {
-    try {
-      const response = await authService.getCurrentUser()
-      authUser.value = response.user
-      return response
-    } catch (error) {
-      authUser.value = null
-      throw error
-    }
-  }
-
-  //  Initialize auth state on app load
-  const initializeAuth = async () => {
-    isLoading.value = true
-    try {
-      await verifySession()
-    } catch (error) {
-      // Session invalid or not logged in - this is fine
-      authUser.value = null
-    } finally {
-      isLoading.value = false
-    }
-  }
   // Actions
   const register = async (data: RegisterData) => {
     return withLoading(async () => {
@@ -195,6 +172,7 @@ export const useAuthStore = defineStore('authStore', () => {
   return {
     // State
     authUser,
+    authInitialized,
     isLoading,
     error,
     validationErrors,
@@ -215,7 +193,6 @@ export const useAuthStore = defineStore('authStore', () => {
     clearMessages,
     setSuccessMessage,
     resetPassword,
-    initializeAuth,
     exchangeGoogleCode,
     initiateGoogleAuth,
     resendVerificationEmail,

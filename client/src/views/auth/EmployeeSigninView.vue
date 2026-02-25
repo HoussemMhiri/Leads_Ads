@@ -50,26 +50,21 @@ import { computed } from 'vue'
 import { useRouter, RouterLink } from 'vue-router'
 import { useForm } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
-import { z } from 'zod'
 import { storeToRefs } from 'pinia'
 
 import TextField from '@/components/forms/TextField.vue'
 import Button from '@/components/ui/button/Button.vue'
 import AlertMessage from '@/components/shared/AlertMessage.vue'
 import { useEmployeeAuthStore } from '@/features/workspace/employee/store/employeeAuth.store'
+import { employeeLoginSchema } from '@/features/workspace/employee/schemas/employee.schema'
 
 const router = useRouter()
 const employeeAuthStore = useEmployeeAuthStore()
 
 const { isLoading, error } = storeToRefs(employeeAuthStore)
 
-const loginSchema = z.object({
-  email: z.string().email('Please enter a valid email'),
-  password: z.string().min(1, 'Password is required'),
-})
-
 const { handleSubmit, errors } = useForm({
-  validationSchema: toTypedSchema(loginSchema),
+  validationSchema: toTypedSchema(employeeLoginSchema),
 })
 
 const hasErrors = computed(() => Object.keys(errors.value).length > 0)

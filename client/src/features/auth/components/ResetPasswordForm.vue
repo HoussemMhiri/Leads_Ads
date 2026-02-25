@@ -62,7 +62,7 @@ import { useForm } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
 import { useRouter, useRoute, RouterLink } from 'vue-router'
 import { storeToRefs } from 'pinia'
-import { watch } from 'vue'
+import { watch, onBeforeUnmount } from 'vue'
 
 import Button from '@/components/ui/button/Button.vue'
 import TextField from '@/components/forms/TextField.vue'
@@ -88,12 +88,17 @@ const { handleSubmit } = useForm({
 })
 
 // Watch for success and redirect
+let redirectTimer: number | null = null
 watch(successMessage, (newValue) => {
   if (newValue) {
-    setTimeout(() => {
+    redirectTimer = window.setTimeout(() => {
       router.push({ name: 'signin' })
     }, 2000)
   }
+})
+
+onBeforeUnmount(() => {
+  if (redirectTimer) clearTimeout(redirectTimer)
 })
 
 const onSubmit = handleSubmit(async (values) => {

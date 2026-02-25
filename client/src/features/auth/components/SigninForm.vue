@@ -85,7 +85,7 @@ const route = useRoute()
 
 const { isLoading, error, successMessage } = storeToRefs(authStore)
 
-const { handleSubmit, errors } = useForm({
+const { handleSubmit, errors, setErrors } = useForm({
   validationSchema: toTypedSchema(loginSchema),
   initialValues: {
     email: '',
@@ -105,7 +105,9 @@ const onSubmit = handleSubmit(async (values) => {
       router.push({ name: 'verifyEmail' })
       return
     }
-    console.error('Login failed:', err)
+    if (Object.keys(parsed.fieldErrors).length) {
+      setErrors(parsed.fieldErrors)
+    }
   }
 })
 

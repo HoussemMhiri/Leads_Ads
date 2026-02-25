@@ -10,26 +10,31 @@ export const useWorkspaceStore = defineStore('workspaceStore', () => {
   const isLoading = ref(false)
   const error = ref<string | null>(null)
 
+  const withLoading = async <T>(asyncFn: () => Promise<T>): Promise<T> => {
+    isLoading.value = true
+    error.value = null
+    try {
+      return await asyncFn()
+    } catch (err) {
+      error.value = parseApiError(err).message
+      throw err
+    } finally {
+      isLoading.value = false
+    }
+  }
+
   const setWorkspace = (info: WorkspaceInfo) => {
     name.value = info.name
     logo.value = info.logo_url
   }
 
   const update = async (data: UpdateWorkspaceData): Promise<UpdateWorkspaceResponse> => {
-    isLoading.value = true
-    error.value = null
-    try {
+    return withLoading(async () => {
       const response = await workspaceService.update(data)
       name.value = response.workspace.name
       logo.value = response.workspace.logo_url
       return response
-    } catch (err) {
-      const parsed = parseApiError(err)
-      error.value = parsed.message
-      throw err
-    } finally {
-      isLoading.value = false
-    }
+    })
   }
 
   const clear = () => {
