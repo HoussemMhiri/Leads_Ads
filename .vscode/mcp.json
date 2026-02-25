@@ -6,6 +6,13 @@
                 "G:/New folder/Leads_Ads/server/artisan",
                 "boost:mcp"
             ]
+        },
+        "shadcn": {
+            "command": "npx",
+            "args": [
+                "shadcn-vue@latest",
+                "mcp"
+            ]
         }
     }
 }

@@ -121,10 +121,38 @@ const emit = defineEmits<{
 </script>
 ```
 
-## UI Components
+## Responsive Design
 
-- Use reka-ui primitives from `src/components/ui/` as the base for all UI.
-- Complex UI components (Dialog, Select, Sidebar) have subcomponent exports via `index.ts` barrel files.
+- **All UI must be mobile-first and fully responsive.** Design for small screens first, then scale up with `sm:`, `md:`, `lg:` breakpoints.
+- Use `flex-col` / `flex-row` with breakpoint switches, `grid` with `grid-cols-1 sm:grid-cols-2`, and `w-full sm:w-auto` patterns.
+- Touch targets must be at least 44px tall on mobile.
+- Never rely on hover-only interactions — ensure tap/click works on touch devices.
+
+## UI Components (shadcn-vue)
+
+This project uses **shadcn-vue** components. Always check what is already installed before building anything custom.
+
+**Available components** (in `src/components/ui/`):
+
+| Component  | Import path                    |
+| ---------- | ------------------------------ |
+| `Button`   | `@/components/ui/button`       |
+| `Dialog`   | `@/components/ui/dialog`       |
+| `Field`    | `@/components/ui/field`        |
+| `Form`     | `@/components/ui/form`         |
+| `Input`    | `@/components/ui/input`        |
+| `Label`    | `@/components/ui/label`        |
+| `Select`   | `@/components/ui/select`       |
+| `Separator`| `@/components/ui/separator`    |
+| `Sheet`    | `@/components/ui/sheet`        |
+| `Sidebar`  | `@/components/ui/sidebar`      |
+| `Skeleton` | `@/components/ui/skeleton`     |
+| `Spinner`  | `@/components/ui/spinner`      |
+| `Tooltip`  | `@/components/ui/tooltip`      |
+
+- **Before building any UI element**, check this list. If a component exists, use it — do not re-implement it.
+- If a needed component is missing, use the **shadcn MCP** (available in this session) to search the registry and install it: ask the MCP `list_components` or `add_component` directly. Do not ask the user to run CLI commands for component installation.
+- Complex components (Dialog, Select, Sidebar, Sheet) have subcomponent exports via `index.ts` barrel files.
 - Use CVA (`class-variance-authority`) for variant-based styling. See `Button` as the reference.
 - Use the `cn()` utility for all dynamic class composition:
 
