@@ -5,17 +5,12 @@
       <SidebarMenu>
         <SidebarMenuItem>
           <SidebarMenuButton size="lg" class="cursor-default">
-            <div
-              class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-sm shrink-0 overflow-hidden"
-            >
-              <img
-                v-if="workspaceStore.logo"
-                :src="workspaceStore.logo"
-                :alt="tenantName"
-                class="h-full w-full object-cover"
-              />
-              <span v-else>{{ tenantInitial }}</span>
-            </div>
+            <Avatar class="size-8 rounded-lg">
+              <AvatarImage v-if="workspaceStore.logo" :src="workspaceStore.logo" :alt="tenantName" />
+              <AvatarFallback class="rounded-lg bg-primary text-primary-foreground font-bold text-sm">
+                {{ tenantInitial }}
+              </AvatarFallback>
+            </Avatar>
             <div class="flex flex-col gap-0.5 leading-none overflow-hidden">
               <span class="font-semibold truncate">{{ tenantName }}</span>
               <span class="text-xs text-muted-foreground truncate">Workspace</span>
@@ -96,17 +91,12 @@
       <SidebarMenu>
         <SidebarMenuItem>
           <SidebarMenuButton size="lg">
-            <div
-              class="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary font-semibold text-sm shrink-0 overflow-hidden"
-            >
-              <img
-                v-if="userAvatar"
-                :src="userAvatar"
-                :alt="userName"
-                class="h-full w-full object-cover"
-              />
-              <span v-else>{{ userInitial }}</span>
-            </div>
+            <Avatar class="size-8">
+              <AvatarImage v-if="userAvatar" :src="userAvatar" :alt="userName" />
+              <AvatarFallback class="bg-primary/10 text-primary font-semibold text-sm">
+                {{ userInitial }}
+              </AvatarFallback>
+            </Avatar>
             <div class="flex flex-col gap-0.5 leading-none overflow-hidden">
               <span class="font-medium truncate">{{ userName }}</span>
               <span class="text-xs text-muted-foreground truncate">{{ userEmail }}</span>
@@ -158,6 +148,7 @@ import {
   SidebarMenuSubItem,
   SidebarRail,
 } from '@/components/ui/sidebar'
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { useEmployeeAuthStore } from '@/features/workspace/employee/store/employeeAuth.store'
 import { useWorkspaceStore } from '@/features/workspace/store/workspace.store'

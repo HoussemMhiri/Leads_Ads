@@ -2,19 +2,19 @@
   <div class="space-y-6">
     <!-- Logo upload -->
     <div class="flex items-center gap-4">
-      <div
-        class="relative w-16 h-16 rounded-full overflow-hidden border-2 border-dashed border-border cursor-pointer hover:border-primary transition-colors flex items-center justify-center bg-muted"
-        @click="triggerFileInput"
-      >
-        <img
-          v-if="logoPreview"
-          :src="logoPreview"
-          alt="Workspace logo"
-          class="w-full h-full object-cover"
-        />
-        <span v-else class="text-xs text-muted-foreground text-center leading-tight px-1">
-          Upload logo
-        </span>
+      <div class="relative group cursor-pointer" @click="triggerFileInput">
+        <Avatar class="w-20 h-20">
+          <AvatarImage v-if="logoPreview" :src="logoPreview" alt="Workspace logo" />
+          <AvatarFallback class="text-lg font-semibold">
+            {{ workspaceInitials }}
+          </AvatarFallback>
+        </Avatar>
+        <!-- Hover overlay -->
+        <div
+          class="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+        >
+          <Camera class="w-5 h-5 text-white" />
+        </div>
         <input
           ref="fileInput"
           type="file"
@@ -23,17 +23,22 @@
           @change="onFileChange"
         />
       </div>
-      <div>
+      <div class="space-y-1">
         <p class="text-sm font-medium">Workspace Logo</p>
-        <p class="text-xs text-muted-foreground">JPG, PNG or WebP · max 2 MB</p>
-        <button
+        <p class="text-xs text-muted-foreground">JPG, PNG or WebP · max 20 MB</p>
+        <Button variant="outline" size="sm" type="button" @click="triggerFileInput">
+          Change logo
+        </Button>
+        <Button
           v-if="logoFile"
+          variant="ghost"
+          size="sm"
           type="button"
-          class="text-xs text-destructive mt-1 hover:underline"
+          class="text-destructive hover:text-destructive ml-1"
           @click="clearLogo"
         >
           Remove
-        </button>
+        </Button>
       </div>
     </div>
 
@@ -71,6 +76,9 @@
 import { ref, computed, watch } from 'vue'
 import { useWorkspaceStore } from '@/features/workspace/store/workspace.store'
 import AlertMessage from '@/components/shared/AlertMessage.vue'
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
+import { Button } from '@/components/ui/button'
+import { Camera } from 'lucide-vue-next'
 
 const workspaceStore = useWorkspaceStore()
 
@@ -85,6 +93,15 @@ const errorMessage = ref<string | null>(null)
 
 const nameChanged = computed(() => name.value.trim() !== originalName.value)
 const hasChanges = computed(() => nameChanged.value || logoFile.value !== null)
+const workspaceInitials = computed(() => {
+  const n = name.value.trim()
+  if (!n) return '?'
+  return n
+    .split(' ')
+    .slice(0, 2)
+    .map((w) => w[0]?.toUpperCase() ?? '')
+    .join('')
+})
 
 watch(
   () => workspaceStore.name,
