@@ -39,7 +39,7 @@ class EmailVerificationController extends Controller
             'email' => 'required|email',
         ]);
 
-        $user = User::where('email', $request->email)->first();
+        $user = User::where('email', $request->validated('email'))->first();
 
         if (! $user) {
             throw ValidationException::withMessages([

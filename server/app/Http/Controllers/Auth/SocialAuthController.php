@@ -103,7 +103,13 @@ class SocialAuthController extends Controller
         }
 
         $user = User::find($userId);
+
+        if (! $user) {
+            return response()->json(['error' => 'User not found.'], 401);
+        }
+
         Auth::login($user);
+        $request->session()->regenerate();
 
         $tenant = $user->tenant;
 

@@ -40,7 +40,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function sendEmailVerificationNotification(): void
     {
-        $this->notify(new QueuedVerifyEmail());
+        $this->notify(new QueuedVerifyEmail);
     }
 
     public function sendPasswordResetNotification($token): void
@@ -57,22 +57,5 @@ class User extends Authenticatable implements MustVerifyEmail
     public function tenant(): HasOne
     {
         return $this->hasOne(Tenant::class);
-    }
-
-    /**
-     * Access the user's employees through their tenant.
-     * Tenancy is initialized before querying.
-     */
-    public function employees()
-    {
-        $tenant = $this->tenant;
-
-        if (! $tenant) {
-            return collect();
-        }
-
-        tenancy()->initialize($tenant);
-
-        return Employee::query();
     }
 }

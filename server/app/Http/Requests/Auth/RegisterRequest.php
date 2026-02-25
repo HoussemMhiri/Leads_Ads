@@ -19,13 +19,18 @@ class RegisterRequest extends FormRequest
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
+    protected function prepareForValidation(): void
+    {
+        $this->merge(['email' => strtolower((string) $this->email)]);
+    }
+
     public function rules(): array
     {
         return [
-            'name'         => 'required|string|max:255',
+            'name' => 'required|string|max:255',
             'company_name' => 'required|string|max:255',
-            'email'        => 'required|email:rfc,dns|unique:users,email',
-            'password'     => 'required|string|confirmed|min:8',
+            'email' => 'required|email:rfc,dns|unique:users,email',
+            'password' => 'required|string|confirmed|min:8',
         ];
     }
 }
