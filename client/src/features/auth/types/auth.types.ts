@@ -2,6 +2,7 @@ export interface Tenant {
   id: number
   subdomain: string
   company_name: string | null
+  logo_url: string | null
 }
 
 export interface User {

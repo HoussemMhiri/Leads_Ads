@@ -42,7 +42,7 @@ const handleLogout = async () => {
       await employeeAuthStore.logout()
       router.push({
         name: 'employeeSignin',
-        query: { tenant: employeeAuthStore.tenantId ?? undefined },
+        query: { tenant: employeeAuthStore.workspaceName ?? undefined },
       })
     } else {
       await authStore.logout()

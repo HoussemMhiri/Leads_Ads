@@ -7,6 +7,7 @@ use App\Models\Tenant;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class SessionController extends Controller
 {
@@ -25,14 +26,17 @@ class SessionController extends Controller
             return response()->json([
                 'type' => 'owner',
                 'user' => [
-                    'id'     => $user->id,
-                    'name'   => $user->name,
-                    'email'  => $user->email,
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
                     'avatar' => $user->avatar,
                     'tenant' => $tenant ? [
-                        'id'           => $tenant->id,
-                        'subdomain'    => $tenant->domains->first()?->domain,
+                        'id' => $tenant->id,
+                        'subdomain' => $tenant->domains->first()?->domain,
                         'company_name' => $tenant->company_name,
+                        'logo_url' => $tenant->logo_path
+                            ? Storage::disk('central_public')->url($tenant->logo_path)
+                            : null,
                     ] : null,
                 ],
             ]);
@@ -52,16 +56,20 @@ class SessionController extends Controller
 
                     if ($employee) {
                         return response()->json([
-                            'type'     => 'employee',
+                            'type' => 'employee',
                             'employee' => [
-                                'id'    => $employee->id,
-                                'name'  => $employee->name,
+                                'id' => $employee->id,
+                                'name' => $employee->name,
                                 'email' => $employee->email,
-                                'role'  => $employee->role,
+                                'role' => $employee->role,
                             ],
                             'tenant' => [
-                                'id'        => $tenant->id,
+                                'id' => $tenant->id,
                                 'workspace' => $tenant->domains->first()?->domain,
+                                'name' => $tenant->company_name,
+                                'logo_url' => $tenant->logo_path
+                                    ? Storage::disk('central_public')->url($tenant->logo_path)
+                                    : null,
                             ],
                         ]);
                     }

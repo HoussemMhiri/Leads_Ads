@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Controllers\Employee\EmployeeAuthController;
 use App\Http\Controllers\Employee\EmployeeInvitationController;
+use App\Http\Controllers\Workspace\WorkspaceController;
 use App\Http\Middleware\InitializeTenancyBySession;
 use Illuminate\Support\Facades\Route;
 
@@ -21,16 +22,14 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+// ── Employee auth routes ───────────────────────────────────────────────────────
+
 Route::middleware(['api'])->prefix('api/employees')->group(function () {
 
-    // ── Login: tenant resolved from central employee_workspaces table ─────────
-    // No session middleware here — the controller initializes tenancy manually.
-
+    // Login: tenant resolved from central employee_workspaces table
     Route::post('login', [EmployeeAuthController::class, 'login'])
         ->middleware('throttle:authLimiter')
         ->name('tenant.employee.login');
-
-    // ── All protected routes: tenant from session ─────────────────────────────
 
     Route::middleware(InitializeTenancyBySession::class)->group(function () {
 
@@ -41,7 +40,6 @@ Route::middleware(['api'])->prefix('api/employees')->group(function () {
                 ->name('tenant.employee.me');
         });
 
-        // Accessible by both owner (auth:sanctum) and employee (auth:employee)
         Route::middleware('auth:sanctum,employee')->group(function () {
             Route::get('roles', [EmployeeInvitationController::class, 'roles'])
                 ->name('tenant.employee.roles');
@@ -51,3 +49,12 @@ Route::middleware(['api'])->prefix('api/employees')->group(function () {
         });
     });
 });
+
+// ── Workspace routes (owner + employee) ───────────────────────────────────────
+
+Route::middleware(['api', InitializeTenancyBySession::class, 'auth:sanctum,employee'])
+    ->prefix('api/workspace')
+    ->group(function () {
+        Route::post('/', [WorkspaceController::class, 'update'])
+            ->name('workspace.update');
+    });

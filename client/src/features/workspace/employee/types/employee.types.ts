@@ -58,8 +58,15 @@ export interface AuthenticatedEmployee {
   role: string
 }
 
+export interface TenantInfo {
+  id: string
+  workspace: string | null
+  name: string | null
+  logo_url: string | null
+}
+
 export interface EmployeeAuthResponse {
   message: string
   employee?: AuthenticatedEmployee
-  tenant?: { id: string; workspace: string | null }
+  tenant?: TenantInfo
 }

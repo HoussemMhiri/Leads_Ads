@@ -47,6 +47,17 @@ return [
             'report' => false,
         ],
 
+        // Central public disk — NOT tenant-scoped (not listed in tenancy.php filesystem disks).
+        // Use this for files that must be publicly accessible regardless of tenant context (e.g. workspace logos).
+        'central_public' => [
+            'driver' => 'local',
+            'root' => public_path('uploads'),
+            'url' => env('APP_URL').'/uploads',
+            'visibility' => 'public',
+            'throw' => false,
+            'report' => false,
+        ],
+
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),

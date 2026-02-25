@@ -9,6 +9,7 @@ import ResetPasswordView from '@/views/auth/ResetPasswordView.vue'
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { useEmployeeAuthStore } from '@/features/workspace/employee/store/employeeAuth.store'
+import { useWorkspaceStore } from '@/features/workspace/store/workspace.store'
 import GoogleCallbackView from '@/views/auth/GoogleCallbackView.vue'
 
 const router = createRouter({
@@ -85,6 +86,7 @@ let authInitialized = false
 router.beforeEach(async (to, _from, next) => {
   const authStore = useAuthStore()
   const employeeAuthStore = useEmployeeAuthStore()
+  const workspaceStore = useWorkspaceStore()
 
   // Restore session on first navigation — single request, never 401
   if (!authInitialized) {
@@ -92,9 +94,17 @@ router.beforeEach(async (to, _from, next) => {
     const me = await sessionService.getMe()
     if (me.type === 'owner') {
       authStore.authUser = me.user
+      workspaceStore.setWorkspace({
+        name: me.user.tenant?.company_name ?? null,
+        logo_url: me.user.tenant?.logo_url ?? null,
+      })
     } else if (me.type === 'employee') {
       employeeAuthStore.authEmployee = me.employee
       employeeAuthStore.workspaceName = me.tenant?.workspace ?? null
+      workspaceStore.setWorkspace({
+        name: me.tenant?.name ?? null,
+        logo_url: me.tenant?.logo_url ?? null,
+      })
     }
     authInitialized = true
   }

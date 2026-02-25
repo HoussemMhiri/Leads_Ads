@@ -6,9 +6,15 @@
         <SidebarMenuItem>
           <SidebarMenuButton size="lg" class="cursor-default">
             <div
-              class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-sm shrink-0"
+              class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-sm shrink-0 overflow-hidden"
             >
-              {{ tenantInitial }}
+              <img
+                v-if="workspaceStore.logo"
+                :src="workspaceStore.logo"
+                :alt="tenantName"
+                class="h-full w-full object-cover"
+              />
+              <span v-else>{{ tenantInitial }}</span>
             </div>
             <div class="flex flex-col gap-0.5 leading-none overflow-hidden">
               <span class="font-semibold truncate">{{ tenantName }}</span>
@@ -121,7 +127,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, computed, watch, ref } from 'vue'
+import { reactive, computed, ref } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import { CollapsibleRoot, CollapsibleTrigger, CollapsibleContent } from 'reka-ui'
 import {
@@ -154,6 +160,7 @@ import {
 } from '@/components/ui/sidebar'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { useEmployeeAuthStore } from '@/features/workspace/employee/store/employeeAuth.store'
+import { useWorkspaceStore } from '@/features/workspace/store/workspace.store'
 import { storeToRefs } from 'pinia'
 import type { RouteLocationRaw } from 'vue-router'
 import WorkspaceSettingsModal from '@/features/workspace/components/WorkspaceSettingsModal.vue'
@@ -161,9 +168,10 @@ import WorkspaceSettingsModal from '@/features/workspace/components/WorkspaceSet
 // ── Modal state ───────────────────────────────────────────────────────────────
 const showWorkspaceSettings = ref(false)
 
-// ── Auth — works for both owners and employees ────────────────────────────────
+// ── Auth ──────────────────────────────────────────────────────────────────────
 const authStore = useAuthStore()
 const employeeAuthStore = useEmployeeAuthStore()
+const workspaceStore = useWorkspaceStore()
 const { authUser } = storeToRefs(authStore)
 const { authEmployee, workspaceName } = storeToRefs(employeeAuthStore)
 
@@ -179,10 +187,12 @@ const userAvatar = computed(() => (isEmployee.value ? null : (authUser.value?.av
 const userInitial = computed(() => userName.value.charAt(0).toUpperCase())
 
 // ── Workspace header ──────────────────────────────────────────────────────────
-const tenantName = computed(() =>
-  isEmployee.value
-    ? (workspaceName.value ?? 'My Workspace')
-    : (authUser.value?.tenant?.subdomain ?? 'My Workspace'),
+const tenantName = computed(
+  () =>
+    workspaceStore.name ??
+    (isEmployee.value
+      ? (workspaceName.value ?? 'My Workspace')
+      : (authUser.value?.tenant?.subdomain ?? 'My Workspace')),
 )
 const tenantInitial = computed(() => tenantName.value.charAt(0).toUpperCase())
 
@@ -244,7 +254,9 @@ const navItems: NavItem[] = [
   {
     title: 'Workspace Settings',
     icon: Settings,
-    action: () => { showWorkspaceSettings.value = true },
+    action: () => {
+      showWorkspaceSettings.value = true
+    },
   },
 ]
 

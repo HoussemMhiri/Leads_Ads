@@ -131,16 +131,19 @@ class AuthController extends Controller
             'id' => $user->id,
             'name' => $user->name,
             'email' => $user->email,
-            'avatar'=>$user->avatar,
+            'avatar' => $user->avatar,
         ];
 
         $tenant = $user->tenant;
 
         if ($tenant) {
             $data['tenant'] = [
-                'id'           => $tenant->id,
-                'subdomain'    => $tenant->domains->first()?->domain,
+                'id' => $tenant->id,
+                'subdomain' => $tenant->domains->first()?->domain,
                 'company_name' => $tenant->company_name,
+                'logo_url' => $tenant->logo_path
+                    ? Storage::disk('central_public')->url($tenant->logo_path)
+                    : null,
             ];
         }
 

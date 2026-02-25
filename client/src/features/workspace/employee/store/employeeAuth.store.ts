@@ -41,25 +41,6 @@ export const useEmployeeAuthStore = defineStore('employeeAuthStore', () => {
 
   // ── Actions ────────────────────────────────────────────────────────────────
 
-  /**
-   * Called on app boot to restore an existing employee session.
-   * Tenant context is resolved server-side via the session cookie —
-   * no localStorage or header needed.
-   */
-  const initializeAuth = async () => {
-    isLoading.value = true
-    try {
-      const response = await employeeService.getCurrentEmployee()
-      authEmployee.value = response.employee ?? null
-      workspaceName.value = response.tenant?.workspace ?? null
-    } catch {
-      authEmployee.value = null
-      workspaceName.value = null
-    } finally {
-      isLoading.value = false
-    }
-  }
-
   const login = async (credentials: EmployeeLoginCredentials) => {
     return withLoading(async () => {
       const response = await employeeService.loginEmployee(credentials)
@@ -96,7 +77,6 @@ export const useEmployeeAuthStore = defineStore('employeeAuthStore', () => {
     isAuthenticated,
     login,
     logout,
-    initializeAuth,
     clearError,
   }
 })

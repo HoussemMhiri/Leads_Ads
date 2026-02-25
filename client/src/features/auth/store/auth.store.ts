@@ -182,7 +182,6 @@ export const useAuthStore = defineStore('authStore', () => {
     })
   }
 
-
   return {
     // State
     authUser,

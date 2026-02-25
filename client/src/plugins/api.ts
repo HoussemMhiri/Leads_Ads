@@ -4,6 +4,7 @@ import axios, { type InternalAxiosRequestConfig } from 'axios'
 export const ENDPOINT_PREFIXES = {
   auth: '/api/auth',
   employees: '/api/employees',
+  workspace: '/api/workspace',
   connections: '/api/meta/connections',
   campaigns: '/api/meta/campaigns',
 } as const

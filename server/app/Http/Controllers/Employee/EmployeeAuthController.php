@@ -10,6 +10,7 @@ use App\Models\Tenant;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
 class EmployeeAuthController extends Controller
@@ -66,12 +67,9 @@ class EmployeeAuthController extends Controller
             $request->session()->regenerate();
 
             return response()->json([
-                'message'  => 'Login successful',
+                'message' => 'Login successful',
                 'employee' => $this->employeeResource($employee),
-                'tenant'   => [
-                    'id'        => $tenant->id,
-                    'workspace' => $tenant->domains->first()?->domain,
-                ],
+                'tenant' => $this->tenantResource($tenant),
             ]);
         } finally {
             tenancy()->end();
@@ -103,10 +101,7 @@ class EmployeeAuthController extends Controller
 
         return response()->json([
             'employee' => $this->employeeResource($employee),
-            'tenant'   => [
-                'id'        => tenant('id'),
-                'workspace' => tenancy()->tenant->domains->first()?->domain,
-            ],
+            'tenant' => $this->tenantResource(tenancy()->tenant),
         ]);
     }
 
@@ -115,11 +110,22 @@ class EmployeeAuthController extends Controller
     private function employeeResource(Employee $employee): array
     {
         return [
-            'id'    => $employee->id,
-            'name'  => $employee->name,
+            'id' => $employee->id,
+            'name' => $employee->name,
             'email' => $employee->email,
-            'role'  => $employee->role,
+            'role' => $employee->role,
         ];
     }
 
+    private function tenantResource(Tenant $tenant): array
+    {
+        return [
+            'id' => $tenant->id,
+            'workspace' => $tenant->domains->first()?->domain,
+            'name' => $tenant->company_name,
+            'logo_url' => $tenant->logo_path
+                ? Storage::disk('central_public')->url($tenant->logo_path)
+                : null,
+        ];
+    }
 }
