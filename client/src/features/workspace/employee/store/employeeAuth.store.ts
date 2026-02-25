@@ -6,6 +6,7 @@ import type {
   EmployeeLoginCredentials,
 } from '@/features/workspace/employee/types/employee.types'
 import { parseApiError } from '@/utils/handleApiError'
+import { useWorkspaceStore } from '@/features/workspace/store/workspace.store'
 
 export const useEmployeeAuthStore = defineStore('employeeAuthStore', () => {
   // ── State ──────────────────────────────────────────────────────────────────
@@ -48,6 +49,12 @@ export const useEmployeeAuthStore = defineStore('employeeAuthStore', () => {
         authEmployee.value = response.employee
       }
       workspaceName.value = response.tenant?.workspace ?? null
+      if (response.tenant) {
+        useWorkspaceStore().setWorkspace({
+          name: response.tenant.name,
+          logo_url: response.tenant.logo_url,
+        })
+      }
       return response
     })
   }

@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
 
@@ -104,6 +105,12 @@ class SocialAuthController extends Controller
         $user = User::find($userId);
         Auth::login($user);
 
+        $tenant = $user->tenant;
+
+        if ($tenant) {
+            $request->session()->put('tenant_id', $tenant->id);
+        }
+
         $userData = [
             'id' => $user->id,
             'name' => $user->name,
@@ -111,12 +118,14 @@ class SocialAuthController extends Controller
             'avatar' => $user->avatar,
         ];
 
-        $tenant = $user->tenant;
-
         if ($tenant) {
             $userData['tenant'] = [
                 'id' => $tenant->id,
                 'subdomain' => $tenant->domains->first()?->domain,
+                'company_name' => $tenant->company_name,
+                'logo_url' => $tenant->logo_path
+                    ? Storage::disk('central_public')->url($tenant->logo_path)
+                    : null,
             ];
         }
 
