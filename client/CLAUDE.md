@@ -136,6 +136,7 @@ This project uses **shadcn-vue** components. Always check what is already instal
 
 | Component  | Import path                    |
 | ---------- | ------------------------------ |
+| `Accordion`| `@/components/ui/accordion`    |
 | `Button`   | `@/components/ui/button`       |
 | `Dialog`   | `@/components/ui/dialog`       |
 | `Field`    | `@/components/ui/field`        |

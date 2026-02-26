@@ -6,6 +6,7 @@ use App\Enums\EmployeeWorkspaceStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Employee\AcceptInvitationRequest;
 use App\Http\Requests\Employee\InviteEmployeesRequest;
+use App\Http\Resources\EmployeeResource;
 use App\Models\Employee;
 use App\Models\EmployeeWorkspace;
 use App\Models\Tenant;
@@ -16,7 +17,21 @@ use Spatie\Permission\Models\Role;
 
 class EmployeeInvitationController extends Controller
 {
-/**
+    /**
+     * Return all team members for the current tenant.
+     * Tenancy is already initialized by InitializeTenancyBySession middleware.
+     */
+    public function members(): JsonResponse
+    {
+        $members = Employee::query()
+            ->orderBy('name')
+            ->get()
+            ->map(fn (Employee $employee) => (new EmployeeResource($employee))->toArray(request()));
+
+        return response()->json($members);
+    }
+
+    /**
      * Return all roles available for employees.
      * Tenancy is already initialized by InitializeTenancyBySession middleware.
      */
@@ -40,8 +55,8 @@ class EmployeeInvitationController extends Controller
         );
 
         return response()->json([
-            'message'       => 'Invitations processed.',
-            'invited'       => $results['invited'],
+            'message' => 'Invitations processed.',
+            'invited' => $results['invited'],
             'already_exists' => $results['already_exists'],
         ]);
     }
@@ -63,8 +78,8 @@ class EmployeeInvitationController extends Controller
             }
 
             return response()->json([
-                'email'     => $employee->email,
-                'tenant'    => $tenantId,
+                'email' => $employee->email,
+                'tenant' => $tenantId,
                 'workspace' => $tenant->domains->first()?->domain,
             ]);
         } finally {

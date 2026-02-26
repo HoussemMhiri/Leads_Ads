@@ -41,6 +41,8 @@ Route::middleware(['api'])->prefix('api/employees')->group(function () {
         });
 
         Route::middleware('auth:sanctum,employee')->group(function () {
+            Route::get('members', [EmployeeInvitationController::class, 'members'])
+                ->name('tenant.employee.members');
             Route::get('roles', [EmployeeInvitationController::class, 'roles'])
                 ->name('tenant.employee.roles');
             Route::post('invite', [EmployeeInvitationController::class, 'invite'])

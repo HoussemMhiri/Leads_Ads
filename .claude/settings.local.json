@@ -10,7 +10,9 @@
       "Bash(php artisan*)",
       "Bash(vendor/bin/pint*)",
       "Bash(npm run*)",
-      "Bash(composer*)"
+      "Bash(composer*)",
+      "mcp__shadcn__search_items_in_registries",
+      "mcp__shadcn__get_add_command_for_items"
     ]
   }
 }

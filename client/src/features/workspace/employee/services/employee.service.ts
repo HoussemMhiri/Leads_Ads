@@ -1,6 +1,7 @@
 import api from '@/plugins/api'
 import type {
   Role,
+  TeamMember,
   InviteResult,
   InvitationDetails,
   AcceptInvitationData,
@@ -11,6 +12,11 @@ import type {
 
 export const employeeService = {
   // ── Invitation management ──────────────────────────────────────────────────
+
+  async getMembers(): Promise<TeamMember[]> {
+    const res = await api.get<TeamMember[]>('/members', { prefix: 'employees' })
+    return res.data
+  },
 
   async getRoles(): Promise<Role[]> {
     const res = await api.get<Role[]>('/roles', { prefix: 'employees' })

@@ -2,11 +2,12 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { employeeService } from '@/features/workspace/employee/services/employee.service'
 import { parseApiError, type ParsedError } from '@/utils/handleApiError'
-import type { Role, InviteResult } from '@/features/workspace/employee/types/employee.types'
+import type { Role, TeamMember, InviteResult } from '@/features/workspace/employee/types/employee.types'
 
 export const useEmployeeStore = defineStore('employeeStore', () => {
   // ── State ──────────────────────────────────────────────────────────────────
   const roles = ref<Role[]>([])
+  const members = ref<TeamMember[]>([])
   const isLoading = ref(false)
   const error = ref<string | null>(null)
 
@@ -34,6 +35,12 @@ export const useEmployeeStore = defineStore('employeeStore', () => {
   }
 
   // ── Actions ────────────────────────────────────────────────────────────────
+  const fetchMembers = async () => {
+    return withLoading(async () => {
+      members.value = await employeeService.getMembers()
+    })
+  }
+
   const fetchRoles = async () => {
     if (roles.value.length > 0) return // already loaded
 
@@ -51,10 +58,12 @@ export const useEmployeeStore = defineStore('employeeStore', () => {
   return {
     // State
     roles,
+    members,
     isLoading,
     error,
 
     // Actions
+    fetchMembers,
     fetchRoles,
     sendInvitations,
     clearError,

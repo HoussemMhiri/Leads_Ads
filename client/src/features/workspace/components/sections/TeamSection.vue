@@ -1,166 +1,194 @@
 <template>
-  <div class="space-y-6">
-    <!-- Invite employees -->
-    <div class="space-y-4">
-      <div>
-        <h4 class="text-sm font-medium">Invite Team Members</h4>
-        <p class="text-xs text-muted-foreground mt-0.5">
-          Send email invitations to add members to your workspace.
-        </p>
-      </div>
+  <div class="space-y-4">
 
-      <AlertMessage :message="inviteSuccess" type="success" />
-      <AlertMessage :message="inviteError" type="error" />
-
-      <!-- Email tag input -->
-      <div class="space-y-1">
-        <div
-          :class="[
-            'flex flex-wrap items-center gap-2 px-3 py-2 rounded-md border bg-background focus-within:ring-2 focus-within:ring-ring min-h-10 transition-colors',
-            emailError ? 'border-destructive focus-within:ring-destructive/50' : '',
-          ]"
-        >
-          <span
-            v-for="(email, index) in inviteEmails"
-            :key="index"
-            class="inline-flex items-center gap-1 px-2 py-0.5 bg-primary/10 text-primary text-xs rounded-full"
-          >
-            {{ email }}
-            <button
-              type="button"
-              @click="removeEmail(index)"
-              class="hover:text-primary/70 font-bold leading-none"
-            >
-              &times;
-            </button>
-          </span>
-          <input
-            v-model="emailInput"
-            type="text"
-            placeholder="Type an email and press Enter"
-            class="flex-1 min-w-32 py-0.5 text-sm outline-none border-none bg-transparent"
-            @keydown.enter.prevent="addEmail"
-            @keydown.tab.prevent="addEmail"
-            @blur="addEmail"
-            @input="emailError = ''"
-          />
+    <!-- Loading skeleton -->
+    <div v-if="isLoading" class="space-y-3">
+      <div v-for="i in 3" :key="i" class="border rounded-md">
+        <div class="flex items-center justify-between px-4 py-3 border-b">
+          <div class="flex items-center gap-2">
+            <Skeleton class="h-4 w-20" />
+            <Skeleton class="h-4 w-6 rounded-full" />
+          </div>
+          <Skeleton class="h-4 w-4" />
         </div>
-        <p v-if="emailError" class="text-xs text-destructive">{{ emailError }}</p>
-        <p v-else class="text-xs text-muted-foreground">
-          {{ inviteEmails.length }}/20 email{{ inviteEmails.length !== 1 ? 's' : '' }} added
-        </p>
-      </div>
-
-      <!-- Role select + Send button -->
-      <div class="flex flex-col gap-3">
-        <Select v-model="selectedRole" :disabled="rolesLoading">
-          <SelectTrigger class="w-full capitalize">
-            <SelectValue placeholder="Role" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem v-for="role in roles" :key="role.id" :value="role.name" class="capitalize">
-              {{ role.name }}
-            </SelectItem>
-          </SelectContent>
-        </Select>
-        <button
-          type="button"
-          :disabled="inviteEmails.length === 0 || isSending"
-          @click="handleSendInvitations"
-          class="w-full px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {{ isSending ? 'Sending…' : `Send Invitation${inviteEmails.length > 1 ? 's' : ''}` }}
-        </button>
+        <div class="divide-y">
+          <div v-for="j in 2" :key="j" class="flex items-center gap-3 px-4 py-3">
+            <Skeleton class="size-8 rounded-full shrink-0" />
+            <div class="flex-1 space-y-1.5">
+              <Skeleton class="h-3 w-32" />
+              <Skeleton class="h-3 w-48" />
+            </div>
+          </div>
+        </div>
       </div>
     </div>
+
+    <!-- Error state -->
+    <AlertMessage v-else-if="error" :message="error" type="error" />
+
+    <!-- Members list -->
+    <template v-else>
+      <Accordion
+        v-if="roleGroups.length > 0"
+        type="multiple"
+        :default-value="allGroupKeys"
+        class="border rounded-md divide-y"
+      >
+        <AccordionItem
+          v-for="group in roleGroups"
+          :key="group.role"
+          :value="group.role"
+          class="border-b-0 last:border-b-0 px-0"
+        >
+          <AccordionTrigger class="px-4 py-3 hover:no-underline hover:bg-muted/40 rounded-none">
+            <div class="flex items-center gap-2">
+              <span class="font-medium capitalize text-sm">{{ group.role }}</span>
+              <span class="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full leading-none">
+                {{ group.members.length }}
+              </span>
+            </div>
+          </AccordionTrigger>
+
+          <AccordionContent class="pb-0">
+            <div class="divide-y border-t">
+              <div
+                v-for="member in group.members"
+                :key="member.id"
+                class="flex items-center gap-3 px-4 py-3"
+              >
+                <Avatar class="size-8 shrink-0">
+                  <AvatarImage v-if="member.avatar" :src="member.avatar" :alt="member.name" />
+                  <AvatarFallback class="text-xs font-medium">
+                    {{ getInitials(member.name) }}
+                  </AvatarFallback>
+                </Avatar>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <p class="text-sm font-medium leading-tight truncate">{{ member.name }}</p>
+                    <span
+                      v-if="member.status === 'pending'"
+                      class="text-[10px] font-medium text-amber-600 bg-amber-50 dark:bg-amber-950 dark:text-amber-400 px-1.5 py-0.5 rounded-full shrink-0 leading-none"
+                    >
+                      Pending
+                    </span>
+                  </div>
+                  <p class="text-xs text-muted-foreground truncate mt-0.5">{{ member.email }}</p>
+                </div>
+              </div>
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
+
+      <p v-else class="text-sm text-muted-foreground text-center py-8">
+        No team members yet.
+      </p>
+    </template>
+
+    <!-- Invite Member button -->
+    <Button class="w-full" @click="isInviteOpen = true">
+      <UserPlus class="size-4 mr-2" />
+      Invite Member
+    </Button>
+
+    <InviteMemberModal v-model:open="isInviteOpen" @invited="onInvited" />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
+import { UserPlus } from 'lucide-vue-next'
 import { useEmployeeStore } from '@/features/workspace/employee/store/employee.store'
-import { isValidEmail } from '@/utils/validators'
+import { useAuthStore } from '@/features/auth/store/auth.store'
 import AlertMessage from '@/components/shared/AlertMessage.vue'
+import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion'
+import InviteMemberModal from './InviteMemberModal.vue'
+
+const ROLE_ORDER = ['owner', 'admin', 'manager', 'member', 'employee']
+
+interface DisplayMember {
+  id: number | string
+  name: string
+  email: string
+  role: string
+  avatar: string | null
+  status: 'active' | 'pending'
+}
+
+interface RoleGroup {
+  role: string
+  members: DisplayMember[]
+}
 
 const employeeStore = useEmployeeStore()
-const { roles, isLoading: rolesLoading } = storeToRefs(employeeStore)
+const authStore = useAuthStore()
+const { members, isLoading, error } = storeToRefs(employeeStore)
+const { authUser } = storeToRefs(authStore)
 
-// ── Roles ─────────────────────────────────────────────────────────────────────
-const selectedRole = ref('member')
+const isInviteOpen = ref(false)
 
 onMounted(async () => {
-  await employeeStore.fetchRoles()
-  if (roles.value.length > 0) {
-    selectedRole.value =
-      roles.value.find((r) => r.name === 'member')?.name ?? roles.value[0]?.name ?? 'member'
-  }
+  await employeeStore.fetchMembers()
 })
 
-// ── Invite form ───────────────────────────────────────────────────────────────
-const inviteEmails = ref<string[]>([])
-const emailInput = ref('')
-const emailError = ref('')
-const inviteSuccess = ref('')
-const isSending = ref(false)
-
-const inviteError = computed(() => employeeStore.error)
-
-const addEmail = () => {
-  const email = emailInput.value.trim().replace(/,$/, '')
-  if (!email) return
-
-  if (!isValidEmail(email)) {
-    emailError.value = 'Please enter a valid email address.'
-    return
-  }
-  if (inviteEmails.value.includes(email)) {
-    emailError.value = 'This email has already been added.'
-    return
-  }
-  if (inviteEmails.value.length >= 20) {
-    emailError.value = 'You can invite up to 20 people at a time.'
-    return
-  }
-
-  inviteEmails.value.push(email)
-  emailInput.value = ''
-  emailError.value = ''
+const getInitials = (name: string): string => {
+  const parts = name.trim().split(/\s+/)
+  if (parts.length === 1) return parts[0].charAt(0).toUpperCase()
+  return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase()
 }
 
-const removeEmail = (index: number) => {
-  inviteEmails.value.splice(index, 1)
-}
+const roleGroups = computed((): RoleGroup[] => {
+  const groupMap = new Map<string, RoleGroup>()
 
-const handleSendInvitations = async () => {
-  inviteSuccess.value = ''
-  employeeStore.clearError()
-  isSending.value = true
-
-  try {
-    const result = await employeeStore.sendInvitations(inviteEmails.value, selectedRole.value)
-
-    const messages: string[] = []
-    if (result.invited.length > 0) {
-      messages.push(`Invitations sent to: ${result.invited.join(', ')}`)
-    }
-    if (result.already_exists.length > 0) {
-      messages.push(`Already registered: ${result.already_exists.join(', ')}`)
-    }
-
-    inviteSuccess.value = messages.join('. ')
-    inviteEmails.value = []
-  } catch {
-    // error already set in store
-  } finally {
-    isSending.value = false
+  // Prepend the workspace owner if current user is an owner
+  if (authUser.value) {
+    groupMap.set('owner', {
+      role: 'owner',
+      members: [
+        {
+          id: `owner-${authUser.value.id}`,
+          name: authUser.value.name,
+          email: authUser.value.email,
+          role: 'owner',
+          avatar: authUser.value.avatar ?? null,
+          status: 'active',
+        },
+      ],
+    })
   }
+
+  // Group employees by their role
+  for (const member of members.value) {
+    const role = member.role ?? 'member'
+    if (!groupMap.has(role)) {
+      groupMap.set(role, { role, members: [] })
+    }
+    groupMap.get(role)!.members.push(member)
+  }
+
+  // Sort groups: known roles first (by ROLE_ORDER), then alphabetically
+  return Array.from(groupMap.values()).sort((a, b) => {
+    const ai = ROLE_ORDER.indexOf(a.role)
+    const bi = ROLE_ORDER.indexOf(b.role)
+    if (ai === -1 && bi === -1) return a.role.localeCompare(b.role)
+    if (ai === -1) return 1
+    if (bi === -1) return -1
+    return ai - bi
+  })
+})
+
+const allGroupKeys = computed(() => roleGroups.value.map((g) => g.role))
+
+const onInvited = async () => {
+  await employeeStore.fetchMembers()
 }
 </script>

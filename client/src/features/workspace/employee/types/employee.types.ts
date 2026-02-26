@@ -10,6 +10,15 @@ export interface Employee {
   updated_at: string | null
 }
 
+export interface TeamMember {
+  id: number
+  name: string
+  email: string
+  role: string
+  avatar: string | null
+  status: 'active' | 'pending'
+}
+
 export interface Role {
   id: number
   name: string
