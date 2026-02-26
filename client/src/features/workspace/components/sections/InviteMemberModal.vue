@@ -72,10 +72,10 @@
       <DialogFooter>
         <Button variant="outline" @click="emit('update:open', false)">Cancel</Button>
         <Button
-          :disabled="inviteEmails.length === 0 || isSending"
+          :disabled="inviteEmails.length === 0 || isPending"
           @click="handleSendInvitations"
         >
-          {{ isSending ? 'Sending…' : `Send Invitation${inviteEmails.length > 1 ? 's' : ''}` }}
+          {{ isPending ? 'Sending…' : `Send Invitation${inviteEmails.length > 1 ? 's' : ''}` }}
         </Button>
       </DialogFooter>
     </DialogContent>
@@ -83,9 +83,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { storeToRefs } from 'pinia'
-import { useEmployeeStore } from '@/features/workspace/employee/store/employee.store'
+import { ref, watch } from 'vue'
+import { useRoles } from '@/features/workspace/employee/composables/useRoles'
+import { useInviteMembers } from '@/features/workspace/employee/composables/useEmployeeMutations'
+import { parseApiError } from '@/utils/handleApiError'
 import { isValidEmail } from '@/utils/validators'
 import AlertMessage from '@/components/shared/AlertMessage.vue'
 import { Button } from '@/components/ui/button'
@@ -105,32 +106,34 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 
-defineProps<{ open: boolean }>()
+const props = defineProps<{ open: boolean }>()
 const emit = defineEmits<{
   'update:open': [value: boolean]
-  invited: []
 }>()
 
-const employeeStore = useEmployeeStore()
-const { roles, isLoading: rolesLoading } = storeToRefs(employeeStore)
+const { data: roles, isLoading: rolesLoading } = useRoles()
+const { mutate: invite, isPending } = useInviteMembers()
 
 const selectedRole = ref('member')
-
-onMounted(async () => {
-  await employeeStore.fetchRoles()
-  if (roles.value.length > 0) {
-    selectedRole.value =
-      roles.value.find((r) => r.name === 'member')?.name ?? roles.value[0]?.name ?? 'member'
-  }
-})
-
 const inviteEmails = ref<string[]>([])
 const emailInput = ref('')
 const emailError = ref('')
 const inviteSuccess = ref('')
-const isSending = ref(false)
-
 const inviteError = ref<string | null>(null)
+
+watch(
+  () => props.open,
+  (open) => {
+    if (!open) {
+      inviteEmails.value = []
+      emailInput.value = ''
+      emailError.value = ''
+      inviteSuccess.value = ''
+      inviteError.value = null
+      selectedRole.value = 'member'
+    }
+  },
+)
 
 const addEmail = () => {
   const email = emailInput.value.trim().replace(/,$/, '')
@@ -158,30 +161,28 @@ const removeEmail = (index: number) => {
   inviteEmails.value.splice(index, 1)
 }
 
-const handleSendInvitations = async () => {
+const handleSendInvitations = () => {
   inviteSuccess.value = ''
   inviteError.value = null
-  employeeStore.clearError()
-  isSending.value = true
 
-  try {
-    const result = await employeeStore.sendInvitations(inviteEmails.value, selectedRole.value)
-
-    const messages: string[] = []
-    if (result.invited.length > 0) {
-      messages.push(`Invitations sent to: ${result.invited.join(', ')}`)
-    }
-    if (result.already_exists.length > 0) {
-      messages.push(`Already registered: ${result.already_exists.join(', ')}`)
-    }
-
-    inviteSuccess.value = messages.join('. ')
-    inviteEmails.value = []
-    emit('invited')
-  } catch (err) {
-    inviteError.value = employeeStore.error
-  } finally {
-    isSending.value = false
-  }
+  invite(
+    { emails: inviteEmails.value, role: selectedRole.value },
+    {
+      onSuccess: (result) => {
+        const messages: string[] = []
+        if (result.invited.length > 0) {
+          messages.push(`Invitations sent to: ${result.invited.join(', ')}`)
+        }
+        if (result.already_exists.length > 0) {
+          messages.push(`Already registered: ${result.already_exists.join(', ')}`)
+        }
+        inviteSuccess.value = messages.join('. ')
+        inviteEmails.value = []
+      },
+      onError: (err) => {
+        inviteError.value = parseApiError(err).message
+      },
+    },
+  )
 }
 </script>

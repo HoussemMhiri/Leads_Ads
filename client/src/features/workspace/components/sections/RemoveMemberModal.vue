@@ -13,11 +13,11 @@
       <AlertMessage :message="errorMsg" type="error" />
 
       <DialogFooter>
-        <Button variant="outline" :disabled="isRemoving" @click="emit('update:open', false)">
+        <Button variant="outline" :disabled="isPending" @click="emit('update:open', false)">
           No, cancel
         </Button>
-        <Button variant="destructive" :disabled="isRemoving" @click="handleRemove">
-          {{ isRemoving ? 'Removing…' : 'Yes, remove' }}
+        <Button variant="destructive" :disabled="isPending" @click="handleRemove">
+          {{ isPending ? 'Removing…' : 'Yes, remove' }}
         </Button>
       </DialogFooter>
     </DialogContent>
@@ -26,7 +26,8 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { useEmployeeStore } from '@/features/workspace/employee/store/employee.store'
+import { useRemoveMember } from '@/features/workspace/employee/composables/useEmployeeMutations'
+import { parseApiError } from '@/utils/handleApiError'
 import type { TeamMember } from '@/features/workspace/employee/types/employee.types'
 import AlertMessage from '@/components/shared/AlertMessage.vue'
 import { Button } from '@/components/ui/button'
@@ -42,12 +43,10 @@ import {
 const props = defineProps<{ open: boolean; member: TeamMember | null }>()
 const emit = defineEmits<{
   'update:open': [value: boolean]
-  removed: []
 }>()
 
-const employeeStore = useEmployeeStore()
+const { mutate: removeMember, isPending } = useRemoveMember()
 
-const isRemoving = ref(false)
 const errorMsg = ref<string | null>(null)
 
 watch(
@@ -57,20 +56,14 @@ watch(
   },
 )
 
-const handleRemove = async () => {
+const handleRemove = () => {
   if (!props.member) return
 
-  isRemoving.value = true
-  errorMsg.value = null
-
-  try {
-    await employeeStore.removeMember(props.member.id)
-    emit('removed')
-    emit('update:open', false)
-  } catch {
-    errorMsg.value = employeeStore.error
-  } finally {
-    isRemoving.value = false
-  }
+  removeMember(props.member.id, {
+    onSuccess: () => emit('update:open', false),
+    onError: (err) => {
+      errorMsg.value = parseApiError(err).message
+    },
+  })
 }
 </script>

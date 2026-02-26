@@ -24,7 +24,7 @@
     </div>
 
     <!-- Error state -->
-    <AlertMessage v-else-if="error" :message="error" type="error" />
+    <AlertMessage v-else-if="isError" :message="errorMessage" type="error" />
 
     <!-- Members list -->
     <template v-else>
@@ -115,18 +115,19 @@
       Invite Member
     </Button>
 
-    <InviteMemberModal v-model:open="isInviteOpen" @invited="onInvited" />
-    <UpdateRoleModal v-model:open="isUpdateRoleOpen" :member="selectedMember" @updated="onMemberUpdated" />
-    <RemoveMemberModal v-model:open="isRemoveOpen" :member="selectedMember" @removed="onMemberRemoved" />
+    <InviteMemberModal v-model:open="isInviteOpen" />
+    <UpdateRoleModal v-model:open="isUpdateRoleOpen" :member="selectedMember" />
+    <RemoveMemberModal v-model:open="isRemoveOpen" :member="selectedMember" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { UserPlus, MoreHorizontal } from 'lucide-vue-next'
-import { useEmployeeStore } from '@/features/workspace/employee/store/employee.store'
+import { useMembers } from '@/features/workspace/employee/composables/useMembers'
 import { useAuthStore } from '@/features/auth/store/auth.store'
+import { parseApiError } from '@/utils/handleApiError'
 import type { TeamMember } from '@/features/workspace/employee/types/employee.types'
 import AlertMessage from '@/components/shared/AlertMessage.vue'
 import { Button } from '@/components/ui/button'
@@ -165,19 +166,19 @@ interface RoleGroup {
   members: DisplayMember[]
 }
 
-const employeeStore = useEmployeeStore()
 const authStore = useAuthStore()
-const { members, isLoading, error } = storeToRefs(employeeStore)
 const { authUser } = storeToRefs(authStore)
+
+const { data: membersData, isLoading, isError, error } = useMembers()
+
+const errorMessage = computed(() =>
+  error.value ? parseApiError(error.value).message : 'Failed to load members.',
+)
 
 const isInviteOpen = ref(false)
 const isUpdateRoleOpen = ref(false)
 const isRemoveOpen = ref(false)
 const selectedMember = ref<TeamMember | null>(null)
-
-onMounted(async () => {
-  await employeeStore.fetchMembers()
-})
 
 const getInitials = (name: string): string => {
   const parts = name.trim().split(/\s+/)
@@ -203,7 +204,6 @@ const openRemove = (member: DisplayMember) => {
 const roleGroups = computed((): RoleGroup[] => {
   const groupMap = new Map<string, RoleGroup>()
 
-  // Prepend the workspace owner if current user is an owner
   if (authUser.value) {
     groupMap.set('owner', {
       role: 'owner',
@@ -220,8 +220,7 @@ const roleGroups = computed((): RoleGroup[] => {
     })
   }
 
-  // Group employees by their role
-  for (const member of members.value) {
+  for (const member of membersData.value ?? []) {
     const role = member.role ?? 'member'
     if (!groupMap.has(role)) {
       groupMap.set(role, { role, members: [] })
@@ -229,7 +228,6 @@ const roleGroups = computed((): RoleGroup[] => {
     groupMap.get(role)!.members.push(member)
   }
 
-  // Sort groups: known roles first (by ROLE_ORDER), then alphabetically
   return Array.from(groupMap.values()).sort((a, b) => {
     const ai = ROLE_ORDER.indexOf(a.role)
     const bi = ROLE_ORDER.indexOf(b.role)
@@ -241,16 +239,4 @@ const roleGroups = computed((): RoleGroup[] => {
 })
 
 const allGroupKeys = computed(() => roleGroups.value.map((g) => g.role))
-
-const onInvited = async () => {
-  await employeeStore.fetchMembers()
-}
-
-const onMemberUpdated = async () => {
-  await employeeStore.fetchMembers()
-}
-
-const onMemberRemoved = async () => {
-  await employeeStore.fetchMembers()
-}
 </script>

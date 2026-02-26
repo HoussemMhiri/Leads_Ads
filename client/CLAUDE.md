@@ -25,6 +25,7 @@ This is the Vue 3 + TypeScript SPA for Leads_Ads. You are an expert with this st
 - **vue** - v3.5
 - **vue-router** - v4
 - **pinia** - v3
+- **@tanstack/vue-query** - v5 (server state)
 - **vite** - v6
 - **tailwindcss** - v4 (via `@tailwindcss/vite`)
 - **reka-ui** - v2 (headless UI primitives)
@@ -54,10 +55,11 @@ src/
 │   └── workspace/
 │       ├── components/
 │       └── employee/
+│           ├── composables/   # Vue Query hooks (useMembers, useRoles, useEmployeeMutations)
 │           ├── components/
 │           ├── schemas/
 │           ├── services/
-│           ├── store/
+│           ├── store/         # Only if session state is needed (prefer composables)
 │           └── types/
 ├── components/
 │   ├── ui/            # Headless reka-ui primitives (never modify arbitrarily)
@@ -75,8 +77,64 @@ src/
 
 ## Architecture & Practices
 
-- Use a **composable** (`use*.ts`) for reusable stateless/reactive logic — UI state, derived values, event handling.
-- Use a **store** for shared state that persists across components or needs to survive navigation.
+### State management — the rule
+
+| State type | Tool | Examples |
+|---|---|---|
+| **Server state** — fetched from API, can go stale | `@tanstack/vue-query` composables | members, roles, campaigns, leads |
+| **Session state** — set at login, lives until logout | Pinia store | auth user, workspace name/logo, CSRF |
+| **UI state** — local to a component | `ref()` / `reactive()` | modal open, form input, loading flags |
+
+### Vue Query (server state)
+
+- All data fetched from the API must use `useQuery` / `useMutation` — **never** Pinia for server data.
+- Composables live in `features/{feature}/composables/` and are named `use*.ts`.
+- `queryKey` must be stable, descriptive arrays: `['members']`, `['campaigns', id]`.
+- Mutations must call `queryClient.invalidateQueries()` in `onSuccess` to keep cache fresh.
+- Handle errors in mutation `onError` callbacks using `parseApiError(err).message`.
+- `useQueryClient()` is only valid inside `setup()` — never call it outside component context.
+
+```typescript
+// features/workspace/employee/composables/useMembers.ts
+import { useQuery } from '@tanstack/vue-query'
+import { employeeService } from '../services/employee.service'
+
+export function useMembers() {
+  return useQuery({
+    queryKey: ['members'],
+    queryFn: () => employeeService.getMembers(),
+  })
+}
+
+// features/workspace/employee/composables/useEmployeeMutations.ts
+import { useMutation, useQueryClient } from '@tanstack/vue-query'
+
+export function useRemoveMember() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (id: number) => employeeService.removeMember(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['members'] }),
+  })
+}
+```
+
+Usage in a component:
+```typescript
+const { data: members, isLoading, isError, error } = useMembers()
+const { mutate: removeMember, isPending } = useRemoveMember()
+
+// Calling a mutation with per-call callbacks:
+removeMember(id, {
+  onSuccess: () => emit('update:open', false),
+  onError: (err) => { errorMsg.value = parseApiError(err).message },
+})
+```
+
+### Pinia (session state)
+
+- Use Pinia **only** for state that arrives with login and survives navigation: auth user, workspace info, CSRF.
+- Always use the **setup store** (composition API) pattern — never options stores.
+- Use a `withLoading()` helper for async Pinia actions.
 - Use a **service** for all API calls — never call `api` directly from a component or store method.
 - Keep **views thin** — no business logic, no direct API calls. Delegate to feature components.
 - Favor composables over prop-drilling more than 2 levels deep.
@@ -164,46 +222,14 @@ import { cn } from '@/lib/utils'
 
 ## Stores (Pinia)
 
+Pinia is **only for session state** — data that arrives at login and persists until logout. Do not use Pinia to fetch or cache server data; use Vue Query composables for that.
+
 - Always use the **setup store** (composition API) pattern — never options stores.
-- Store naming: `useFeatureNameStore` (e.g., `useAuthStore`, `useEmployeeStore`).
+- Store naming: `useFeatureNameStore` (e.g., `useAuthStore`, `useWorkspaceStore`).
 - Store key (first argument): camelCase string matching the name (e.g., `'authStore'`).
 - State is `ref()`, computed properties are `computed()`.
-- Use a `withLoading()` helper inside every store that has async operations:
-
-```typescript
-export const useExampleStore = defineStore('exampleStore', () => {
-  const data = ref<Item[]>([])
-  const isLoading = ref(false)
-  const error = ref<string | null>(null)
-
-  const clearError = () => { error.value = null }
-
-  const withLoading = async <T>(asyncFn: () => Promise<T>): Promise<T> => {
-    isLoading.value = true
-    clearError()
-    try {
-      return await asyncFn()
-    } catch (err) {
-      const parsed = parseApiError(err)
-      error.value = parsed.message
-      throw err
-    } finally {
-      isLoading.value = false
-    }
-  }
-
-  const fetchItems = async () => {
-    return withLoading(async () => {
-      data.value = await exampleService.getAll()
-    })
-  }
-
-  return { data, isLoading, error, clearError, fetchItems }
-})
-```
-
+- Use a `withLoading()` helper for any async Pinia action (e.g., login, logout, workspace update).
 - Always explicitly return the public interface from the store.
-- Cache guards: check if data already exists before fetching (e.g., `if (items.value.length > 0) return`).
 
 ## API Calls (Services)
 

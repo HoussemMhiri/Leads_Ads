@@ -11,7 +11,7 @@
       <div class="py-2">
         <AlertMessage :message="errorMsg" type="error" />
 
-        <Select v-model="selectedRole" :disabled="isUpdating">
+        <Select v-model="selectedRole" :disabled="isPending">
           <SelectTrigger class="w-full capitalize">
             <SelectValue placeholder="Select a role" />
           </SelectTrigger>
@@ -29,11 +29,11 @@
       </div>
 
       <DialogFooter>
-        <Button variant="outline" :disabled="isUpdating" @click="emit('update:open', false)">
+        <Button variant="outline" :disabled="isPending" @click="emit('update:open', false)">
           Cancel
         </Button>
-        <Button :disabled="isUpdating || !selectedRole" @click="handleUpdate">
-          {{ isUpdating ? 'Updating…' : 'Update role' }}
+        <Button :disabled="isPending || !selectedRole" @click="handleUpdate">
+          {{ isPending ? 'Updating…' : 'Update role' }}
         </Button>
       </DialogFooter>
     </DialogContent>
@@ -42,8 +42,9 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import { storeToRefs } from 'pinia'
-import { useEmployeeStore } from '@/features/workspace/employee/store/employee.store'
+import { useRoles } from '@/features/workspace/employee/composables/useRoles'
+import { useUpdateMemberRole } from '@/features/workspace/employee/composables/useEmployeeMutations'
+import { parseApiError } from '@/utils/handleApiError'
 import type { TeamMember } from '@/features/workspace/employee/types/employee.types'
 import AlertMessage from '@/components/shared/AlertMessage.vue'
 import { Button } from '@/components/ui/button'
@@ -66,18 +67,16 @@ import {
 const props = defineProps<{ open: boolean; member: TeamMember | null }>()
 const emit = defineEmits<{
   'update:open': [value: boolean]
-  updated: []
 }>()
 
-const employeeStore = useEmployeeStore()
-const { roles } = storeToRefs(employeeStore)
+const { data: roles } = useRoles()
+const { mutate: updateRole, isPending } = useUpdateMemberRole()
 
 const selectedRole = ref('')
-const isUpdating = ref(false)
 const errorMsg = ref<string | null>(null)
 
 const availableRoles = computed(() =>
-  roles.value.filter((r) => r.name !== props.member?.role),
+  (roles.value ?? []).filter((r) => r.name !== props.member?.role),
 )
 
 watch(
@@ -86,25 +85,21 @@ watch(
     if (open) {
       selectedRole.value = ''
       errorMsg.value = null
-      employeeStore.fetchRoles()
     }
   },
 )
 
-const handleUpdate = async () => {
+const handleUpdate = () => {
   if (!props.member || !selectedRole.value) return
 
-  isUpdating.value = true
-  errorMsg.value = null
-
-  try {
-    await employeeStore.updateMemberRole(props.member.id, selectedRole.value)
-    emit('updated')
-    emit('update:open', false)
-  } catch {
-    errorMsg.value = employeeStore.error
-  } finally {
-    isUpdating.value = false
-  }
+  updateRole(
+    { employeeId: props.member.id, role: selectedRole.value },
+    {
+      onSuccess: () => emit('update:open', false),
+      onError: (err) => {
+        errorMsg.value = parseApiError(err).message
+      },
+    },
+  )
 }
 </script>
