@@ -74,6 +74,30 @@
                   </div>
                   <p class="text-xs text-muted-foreground truncate mt-0.5">{{ member.email }}</p>
                 </div>
+
+                <!-- 3-dot menu — hidden for the owner synthetic row -->
+                <DropdownMenu v-if="!isOwnerRow(member.id)">
+                  <DropdownMenuTrigger as-child>
+                    <button
+                      class="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors shrink-0"
+                      @click.stop
+                    >
+                      <MoreHorizontal class="size-4" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" class="w-40">
+                    <DropdownMenuItem @click="openUpdateRole(member)">
+                      Update role
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      class="text-destructive focus:text-destructive"
+                      @click="openRemove(member)"
+                    >
+                      Leave workspace
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </div>
           </AccordionContent>
@@ -92,15 +116,18 @@
     </Button>
 
     <InviteMemberModal v-model:open="isInviteOpen" @invited="onInvited" />
+    <UpdateRoleModal v-model:open="isUpdateRoleOpen" :member="selectedMember" @updated="onMemberUpdated" />
+    <RemoveMemberModal v-model:open="isRemoveOpen" :member="selectedMember" @removed="onMemberRemoved" />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
-import { UserPlus } from 'lucide-vue-next'
+import { UserPlus, MoreHorizontal } from 'lucide-vue-next'
 import { useEmployeeStore } from '@/features/workspace/employee/store/employee.store'
 import { useAuthStore } from '@/features/auth/store/auth.store'
+import type { TeamMember } from '@/features/workspace/employee/types/employee.types'
 import AlertMessage from '@/components/shared/AlertMessage.vue'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -111,7 +138,16 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import InviteMemberModal from './InviteMemberModal.vue'
+import UpdateRoleModal from './UpdateRoleModal.vue'
+import RemoveMemberModal from './RemoveMemberModal.vue'
 
 const ROLE_ORDER = ['owner', 'admin', 'manager', 'member', 'employee']
 
@@ -135,6 +171,9 @@ const { members, isLoading, error } = storeToRefs(employeeStore)
 const { authUser } = storeToRefs(authStore)
 
 const isInviteOpen = ref(false)
+const isUpdateRoleOpen = ref(false)
+const isRemoveOpen = ref(false)
+const selectedMember = ref<TeamMember | null>(null)
 
 onMounted(async () => {
   await employeeStore.fetchMembers()
@@ -144,6 +183,21 @@ const getInitials = (name: string): string => {
   const parts = name.trim().split(/\s+/)
   if (parts.length === 1) return parts[0].charAt(0).toUpperCase()
   return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase()
+}
+
+const isOwnerRow = (id: number | string): boolean =>
+  typeof id === 'string' && id.startsWith('owner-')
+
+const openUpdateRole = (member: DisplayMember) => {
+  if (typeof member.id !== 'number') return
+  selectedMember.value = member as TeamMember
+  isUpdateRoleOpen.value = true
+}
+
+const openRemove = (member: DisplayMember) => {
+  if (typeof member.id !== 'number') return
+  selectedMember.value = member as TeamMember
+  isRemoveOpen.value = true
 }
 
 const roleGroups = computed((): RoleGroup[] => {
@@ -189,6 +243,14 @@ const roleGroups = computed((): RoleGroup[] => {
 const allGroupKeys = computed(() => roleGroups.value.map((g) => g.role))
 
 const onInvited = async () => {
+  await employeeStore.fetchMembers()
+}
+
+const onMemberUpdated = async () => {
+  await employeeStore.fetchMembers()
+}
+
+const onMemberRemoved = async () => {
   await employeeStore.fetchMembers()
 }
 </script>

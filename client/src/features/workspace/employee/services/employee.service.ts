@@ -28,6 +28,16 @@ export const employeeService = {
     return res.data
   },
 
+  async updateMemberRole(employeeId: number, role: string): Promise<{ message: string }> {
+    const res = await api.patch<{ message: string }>(`/${employeeId}/role`, { role }, { prefix: 'employees' })
+    return res.data
+  },
+
+  async removeMember(employeeId: number): Promise<{ message: string }> {
+    const res = await api.delete<{ message: string }>(`/${employeeId}`, { prefix: 'employees' })
+    return res.data
+  },
+
   async getInvitationDetails(
     tenant: string,
     employee: string,

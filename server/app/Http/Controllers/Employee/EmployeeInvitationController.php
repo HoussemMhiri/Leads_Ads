@@ -6,6 +6,7 @@ use App\Enums\EmployeeWorkspaceStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Employee\AcceptInvitationRequest;
 use App\Http\Requests\Employee\InviteEmployeesRequest;
+use App\Http\Requests\Employee\UpdateEmployeeRoleRequest;
 use App\Http\Resources\EmployeeResource;
 use App\Models\Employee;
 use App\Models\EmployeeWorkspace;
@@ -40,6 +41,33 @@ class EmployeeInvitationController extends Controller
         $roles = Role::where('guard_name', 'employee')->get(['id', 'name']);
 
         return response()->json($roles);
+    }
+
+    /**
+     * Update the role of a specific employee.
+     * Tenancy is already initialized by InitializeTenancyBySession middleware.
+     */
+    public function updateRole(UpdateEmployeeRoleRequest $request, Employee $employee): JsonResponse
+    {
+        $role = $request->validated('role');
+
+        $employee->update(['role' => $role]);
+        $employee->syncRoles([$role]);
+
+        return response()->json(['message' => 'Role updated successfully.']);
+    }
+
+    /**
+     * Remove an employee from the workspace.
+     * Deletes from tenant DB and clears central mapping.
+     */
+    public function remove(Employee $employee): JsonResponse
+    {
+        $email = $employee->email;
+        $employee->delete();
+        EmployeeWorkspace::where('email', $email)->delete();
+
+        return response()->json(['message' => 'Employee removed from workspace.']);
     }
 
     /**

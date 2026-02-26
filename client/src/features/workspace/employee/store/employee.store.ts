@@ -55,6 +55,21 @@ export const useEmployeeStore = defineStore('employeeStore', () => {
     })
   }
 
+  const updateMemberRole = async (employeeId: number, role: string): Promise<void> => {
+    return withLoading(async () => {
+      await employeeService.updateMemberRole(employeeId, role)
+      const member = members.value.find((m) => m.id === employeeId)
+      if (member) member.role = role
+    })
+  }
+
+  const removeMember = async (employeeId: number): Promise<void> => {
+    return withLoading(async () => {
+      await employeeService.removeMember(employeeId)
+      members.value = members.value.filter((m) => m.id !== employeeId)
+    })
+  }
+
   return {
     // State
     roles,
@@ -66,6 +81,8 @@ export const useEmployeeStore = defineStore('employeeStore', () => {
     fetchMembers,
     fetchRoles,
     sendInvitations,
+    updateMemberRole,
+    removeMember,
     clearError,
   }
 })

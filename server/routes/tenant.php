@@ -48,6 +48,10 @@ Route::middleware(['api'])->prefix('api/employees')->group(function () {
             Route::post('invite', [EmployeeInvitationController::class, 'invite'])
                 ->middleware('throttle:10,1')
                 ->name('tenant.employee.invite');
+            Route::patch('{employee}/role', [EmployeeInvitationController::class, 'updateRole'])
+                ->name('tenant.employee.update-role');
+            Route::delete('{employee}', [EmployeeInvitationController::class, 'remove'])
+                ->name('tenant.employee.remove');
         });
     });
 });
