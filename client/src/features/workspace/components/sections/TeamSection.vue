@@ -32,15 +32,15 @@
         v-if="roleGroups.length > 0"
         type="multiple"
         :default-value="allGroupKeys"
-        class="border rounded-md divide-y"
+        class="border rounded-md"
       >
         <AccordionItem
           v-for="group in roleGroups"
           :key="group.role"
           :value="group.role"
-          class="border-b-0 last:border-b-0 px-0"
+          class="px-0"
         >
-          <AccordionTrigger class="px-4 py-3 hover:no-underline hover:bg-muted/40 rounded-none">
+          <AccordionTrigger class="px-4 py-3 hover:no-underline bg-muted/60 hover:bg-muted rounded-none">
             <div class="flex items-center gap-2">
               <span class="font-medium capitalize text-sm">{{ group.role }}</span>
               <span class="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full leading-none">

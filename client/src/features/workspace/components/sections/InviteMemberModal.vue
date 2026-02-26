@@ -1,6 +1,6 @@
 <template>
   <Dialog :open="open" @update:open="emit('update:open', $event)">
-    <DialogContent class="sm:max-w-md">
+    <DialogContent class="sm:max-w-lg">
       <DialogHeader>
         <DialogTitle>Invite Team Members</DialogTitle>
         <DialogDescription>
