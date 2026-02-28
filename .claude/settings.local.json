@@ -12,7 +12,13 @@
       "Bash(npm run*)",
       "Bash(composer*)",
       "mcp__shadcn__search_items_in_registries",
-      "mcp__shadcn__get_add_command_for_items"
+      "mcp__shadcn__get_add_command_for_items",
+      "mcp__laravel-boost__search-docs",
+      "mcp__laravel-boost__get-config",
+      "mcp__laravel-boost__tinker",
+      "mcp__laravel-boost__list-available-env-vars",
+      "mcp__laravel-boost__last-error",
+      "mcp__laravel-boost__database-query"
     ]
   }
 }
