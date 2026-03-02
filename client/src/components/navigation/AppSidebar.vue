@@ -90,7 +90,7 @@
     <SidebarFooter>
       <SidebarMenu>
         <SidebarMenuItem>
-          <SidebarMenuButton size="lg">
+          <SidebarMenuButton size="lg" @click="showAccountSettings = true">
             <Avatar class="size-8">
               <AvatarImage v-if="userAvatar" :src="userAvatar" :alt="userName" />
               <AvatarFallback class="bg-primary/10 text-primary font-semibold text-sm">
@@ -112,6 +112,11 @@
     <WorkspaceSettingsModal
       :open="showWorkspaceSettings"
       @update:open="showWorkspaceSettings = $event"
+    />
+
+    <AccountSettingsModal
+      :open="showAccountSettings"
+      @update:open="showAccountSettings = $event"
     />
   </Sidebar>
 </template>
@@ -155,9 +160,11 @@ import { useWorkspaceStore } from '@/features/workspace/store/workspace.store'
 import { storeToRefs } from 'pinia'
 import type { RouteLocationRaw } from 'vue-router'
 import WorkspaceSettingsModal from '@/features/workspace/components/WorkspaceSettingsModal.vue'
+import AccountSettingsModal from '@/features/account/components/AccountSettingsModal.vue'
 
 // ── Modal state ───────────────────────────────────────────────────────────────
 const showWorkspaceSettings = ref(false)
+const showAccountSettings = ref(false)
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
 const authStore = useAuthStore()
@@ -241,6 +248,9 @@ const navItems: NavItem[] = [
   {
     title: 'My Account',
     icon: UserCircle,
+    action: () => {
+      showAccountSettings.value = true
+    },
   },
   {
     title: 'Workspace Settings',
